@@ -4,7 +4,7 @@ const getAllEvents = async (req, res) => {
 	try {
 		const { data, error } = await Event.getAll(); // Chiama il modello per ottenere gli eventi
 		if (error) throw error;
-		res.json(data); // Restituisce i dati come risposta
+		res.json(data);
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 	}

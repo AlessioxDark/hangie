@@ -21,7 +21,8 @@ const getAll = async () => {
 };
 const getGroup = async (req) => {
 	const { group_id } = req.params;
-	const { data, error } = await supabase.from('gruppi').select(`
+	const { data, error } = await supabase.from('gruppi').select(
+		`
     group_id,
     nome,
     group_cover_img,
@@ -37,7 +38,9 @@ const getGroup = async (req) => {
     partecipanti_gruppo (
     partecipante_id
     )
-    `);
+    `
+	);
+	// .eq('group_id', group_id);
 	// const { data, error } = await supabase.from('gruppi').select(
 	// 	`
 	//   group_id,
@@ -57,4 +60,14 @@ const getGroup = async (req) => {
 
 	return { data, error };
 };
-module.exports = { getAll, getGroup };
+const getEvents = async (req) => {
+	const { group_id } = req.params;
+
+	const { data, error } = await supabase
+		.from('eventi')
+		.select('event_id,titolo,event_cover_img,costo')
+		.eq('group_id', group_id);
+	console.log(data);
+	return { data, error };
+};
+module.exports = { getAll, getGroup, getEvents };

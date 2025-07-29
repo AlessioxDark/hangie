@@ -11,7 +11,16 @@ const getAllEvents = async (req, res) => {
 };
 const getMyEvents = async (req, res) => {
 	try {
-		const { data, error } = await Event.getEvents(req); // Chiama il modello per ottenere gli eventi
+		const { data, error } = await Event.getEvents(); // Chiama il modello per ottenere gli eventi
+		if (error) throw error;
+		res.json(data);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
+const getSpecificEvent = async (req, res) => {
+	try {
+		const { data, error } = await Event.getEvent(req); // Chiama il modello per ottenere gli eventi
 		if (error) throw error;
 		res.json(data);
 	} catch (err) {
@@ -19,4 +28,4 @@ const getMyEvents = async (req, res) => {
 	}
 };
 
-module.exports = { getAllEvents, getMyEvents };
+module.exports = { getAllEvents, getMyEvents, getSpecificEvent };

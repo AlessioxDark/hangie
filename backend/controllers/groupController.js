@@ -16,17 +16,17 @@ const getAllGroups = async (req, res) => {
 			let ultimoEvento = null;
 			row.eventi.forEach((evento) => {
 				if (!ultimoEvento || evento.data > ultimoEvento.data) {
-					ultimoMessaggio = evento;
+					ultimoEvento = evento;
 				}
 			});
-			const { eventi, messaggi, ...groupData } = row;
+
+			const { messaggi, eventi, ...groupData } = row;
 			return {
 				...groupData,
 				ultimoMessaggio: ultimoMessaggio.content,
 				evento: ultimoEvento,
 			};
 		});
-
 		console.log(formattedData);
 		res.json(formattedData); // Restituisce i dati come risposta
 	} catch (err) {
@@ -57,5 +57,22 @@ const getGroupEvents = async (req, res) => {
 		res.status(500).json({ error: err.message });
 	}
 };
+const getSpecificGroupEvent = async (req, res) => {
+	try {
+		const { data, error } = await Group.getEvent(req);
+		if (error) {
+			console.log(error);
+		}
+		console.log(data);
+		res.json(data);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
 
-module.exports = { getAllGroups, getSpecificGroup, getGroupEvents };
+module.exports = {
+	getAllGroups,
+	getSpecificGroup,
+	getGroupEvents,
+	getSpecificGroupEvent,
+};

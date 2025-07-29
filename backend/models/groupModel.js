@@ -9,7 +9,7 @@ const getAll = async () => {
        content,
        sent_at
        ),
-       eventi (
+       eventi(
        titolo,
        event_id,
        data,
@@ -34,9 +34,6 @@ const getGroup = async (req) => {
     utenti(
     nome
     )
-    ),
-    partecipanti_gruppo (
-    partecipante_id
     )
     `
 	);
@@ -70,4 +67,14 @@ const getEvents = async (req) => {
 	console.log(data);
 	return { data, error };
 };
-module.exports = { getAll, getGroup, getEvents };
+const getEvent = async (req) => {
+	const { event_id } = req.params;
+
+	const { data, error } = await supabase
+		.from('eventi')
+		.select('*')
+		.eq('event_id', event_id);
+	console.log(data);
+	return { data, error };
+};
+module.exports = { getAll, getGroup, getEvent };

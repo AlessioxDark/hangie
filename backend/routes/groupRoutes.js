@@ -6,5 +6,6 @@ router.get('/', groupController.getAllGroups);
 router.get('/:group_id', groupController.getSpecificGroup);
 router.get('/:group_id/groupEvents', groupController.getGroupEvents);
 router.get('/groupEvents/:event_id', groupController.getSpecificGroupEvent);
+router.get('/add/newGroup', groupController.getSpecificGroupEvent);
 
 module.exports = router;

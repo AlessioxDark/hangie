@@ -77,4 +77,9 @@ const getEvent = async (req) => {
 	console.log(data);
 	return { data, error };
 };
-module.exports = { getAll, getGroup, getEvent };
+const newGroup = async (req) => {
+	const body = req.body;
+	const { data, error } = await supabase.from('gruppi').insert([{ ...body }]);
+	return { data, error };
+};
+module.exports = { getAll, getGroup, getEvent, newGroup };

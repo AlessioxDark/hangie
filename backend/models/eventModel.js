@@ -47,4 +47,34 @@ const getEvent = async (req) => {
 		.eq('event_id', event_id);
 	return { data, error };
 };
-module.exports = { getAll, getEvent, getEvents };
+const modify = async (req) => {
+	const { event_id } = req.params;
+	const body = req.body;
+	const { data, error } = await supabase
+		.from('eventi')
+		.update([{ ...body }])
+		.eq('event_id', event_id);
+	return { data, error };
+};
+const newEvent = async (req) => {
+	const body = req.body;
+	const { data, error } = await supabase.from('eventi').insert([{ ...body }]);
+	return { data, error };
+};
+const modifyResponse = async (req) => {
+	const body = req.body;
+	const { event_id } = req.params;
+	const { data, error } = await supabase
+		.from('risposte_eventi')
+		.update([{ status: req.body.status }])
+		.eq('event_id', event_id);
+	return { data, error };
+};
+module.exports = {
+	getAll,
+	getEvent,
+	getEvents,
+	modify,
+	newEvent,
+	modifyResponse,
+};

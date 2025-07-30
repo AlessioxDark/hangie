@@ -69,10 +69,23 @@ const getSpecificGroupEvent = async (req, res) => {
 		res.status(500).json({ error: err.message });
 	}
 };
+const addNewGroup = async (req, res) => {
+	try {
+		const { data, error } = await Group.addNew(req);
+		if (error) {
+			console.log(error);
+		}
+		console.log(data);
+		res.json(data);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
 
 module.exports = {
 	getAllGroups,
 	getSpecificGroup,
 	getGroupEvents,
 	getSpecificGroupEvent,
+	addNewGroup,
 };

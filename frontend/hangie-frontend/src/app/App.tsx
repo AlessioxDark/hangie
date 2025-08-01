@@ -1,7 +1,7 @@
 function App() {
 	return (
 		<div>
-			<h1>fate schifo</h1>
+			<h1>Menomale che funziona</h1>
 		</div>
 	);
 }

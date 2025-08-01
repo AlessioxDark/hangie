@@ -13,6 +13,9 @@ app.use(express.json());
 
 app.use('/api/events', eventRoutes);
 app.use('/api/groups', groupRoutes); // Assuming groupRoutes is defined similarly
+app.get('/', (req, res) => {
+	res.send('<h1>tutto funziona</h1>');
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/friends', friendsRoutes);
 app.listen(port, () => {

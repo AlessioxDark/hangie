@@ -82,4 +82,13 @@ const newGroup = async (req) => {
 	const { data, error } = await supabase.from('gruppi').insert([{ ...body }]);
 	return { data, error };
 };
-module.exports = { getAll, getGroup, getEvent, newGroup };
+const modify = async (req) => {
+	const { group_id } = req.params;
+	const body = req.body;
+	const { data, error } = await supabase
+		.from('gruppi')
+		.update([{ ...body }])
+		.eq('group_id', group_id);
+	return { data, error };
+};
+module.exports = { getAll, getGroup, getEvent, newGroup, modify, getEvents };

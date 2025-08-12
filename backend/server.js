@@ -10,7 +10,6 @@ const friendsRoutes = require('./routes/friendsRoutes');
 const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
-
 app.use('/api/events', eventRoutes);
 app.use('/api/groups', groupRoutes); // Assuming groupRoutes is defined similarly
 app.get('/', (req, res) => {

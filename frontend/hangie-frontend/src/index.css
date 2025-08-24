@@ -1,1 +1,16 @@
 @import 'tailwindcss';
+
+@theme {
+	--color-primary: #2563eb;
+	--color-complementary: #f97316;
+	--color-accent: #10b981;
+	--color-white: #ffffff;
+	--color-white-2: #fbfbfe;
+	--color-black: #090909;
+
+	/* support colors */
+	--color-success: hsl(120, 60%, 47%);
+	--color-danger: hsl(40, 60%, 47%);
+	--color-warning: hsl(0, 60%, 47%);
+	--color-info: hsl(240, 60%, 47%);
+}

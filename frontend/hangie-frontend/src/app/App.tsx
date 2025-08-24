@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router';
+import Sidebar from './pages/Sidebar';
 
 function App() {
-	useEffect(() => {
-		fetch('localhost:3000/api/events/discover')
-			.then((res) => res.json())
-			.then((data) => console.log(data));
-	});
 	return (
-		<div>
-			<h1>Menomale che funziona</h1>
+		<div className="h-screen w-full bg-primary">
+			<Sidebar />
+			<BrowserRouter>
+				<Routes></Routes>
+			</BrowserRouter>
 		</div>
 	);
 }

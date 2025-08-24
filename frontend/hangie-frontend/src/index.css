@@ -1,5 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import 'tailwindcss';
-
 @theme {
 	--color-primary: #2563eb;
 	--color-complementary: #f97316;
@@ -13,4 +13,7 @@
 	--color-danger: hsl(40, 60%, 47%);
 	--color-warning: hsl(0, 60%, 47%);
 	--color-info: hsl(240, 60%, 47%);
+
+	--font-title: 'Montserrat';
+	--font-body: 'Open Sans', 'serif';
 }

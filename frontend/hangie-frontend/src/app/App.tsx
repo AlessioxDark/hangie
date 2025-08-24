@@ -4,7 +4,7 @@ import Sidebar from './pages/Sidebar';
 
 function App() {
 	return (
-		<div className="h-screen w-full bg-primary">
+		<div className="h-screen w-full">
 			<Sidebar />
 			<BrowserRouter>
 				<Routes></Routes>

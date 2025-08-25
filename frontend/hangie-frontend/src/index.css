@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import 'tailwindcss';
 @theme {
-	--color-primary: #2563eb;
+	--color-primary: #2563eb; /* #1d4ed8 */
 	--color-complementary: #f97316;
 	--color-accent: #10b981;
-	--color-white: #ffffff;
-	--color-white-2: #fbfbfe;
-	--color-black: #090909;
+	--color-neutral-white: #ffffff;
+	--color-neutral-white-2: #fbfbfe;
+	--color-neutral-black: #090909;
 
 	/* support colors */
 	--color-success: hsl(120, 60%, 47%);

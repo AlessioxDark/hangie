@@ -5,7 +5,7 @@ import Sidebar from './pages/Sidebar';
 function App() {
 	return (
 		<BrowserRouter>
-			<div className="h-screen w-full">
+			<div className="h-screen w-full flex flex-row">
 				<Sidebar />
 				<Routes>
 					<Route path="/" element={<Home />}></Route>

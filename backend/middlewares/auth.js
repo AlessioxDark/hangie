@@ -1,5 +1,6 @@
 const supabase = require("../config/db");
 const authMiddleware = async (req, res, next) => {
+  console.log("cia");
   if (
     !req.headers.authorization ||
     !req.headers.authorization.startsWith("Bearer ")
@@ -14,8 +15,8 @@ const authMiddleware = async (req, res, next) => {
     data: { user },
     error: tokenError,
   } = await supabase.auth.getUser(token);
+  console.log("ok 1", tokenError);
   if (tokenError) {
-    tokenError;
     return res.status(400).json({
       success: false,
       error: { message: "Token scaduto o non valido" },

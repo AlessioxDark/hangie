@@ -35,6 +35,7 @@ export const ApiContextProvider = ({ children }) => {
     profile: false,
     new_group: false,
     auth: false,
+    log_out: false,
   });
   const [error, setError] = useState({
     chat: null,
@@ -55,6 +56,7 @@ export const ApiContextProvider = ({ children }) => {
     profile: null,
     new_group: null,
     auth: null,
+    log_out: null,
   });
 
   const executeApiCall = useCallback(

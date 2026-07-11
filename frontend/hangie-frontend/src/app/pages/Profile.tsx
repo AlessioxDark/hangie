@@ -13,15 +13,6 @@ import { ApiCalls } from "@/services/api";
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 
-const formatDate = (dateStr) => {
-  const d = new Date(dateStr);
-  return {
-    day: d.getDate(),
-    month: d.toLocaleString("it", { month: "short" }).toUpperCase(),
-    weekday: d.toLocaleString("it", { weekday: "short" }).toUpperCase(),
-  };
-};
-
 const Sep = () => <div className="w-px h-7 rounded-full bg-bg-3" />;
 
 const TABS = [
@@ -46,30 +37,6 @@ const TabBar = ({ active, onChange }) => (
     })}
   </div>
 );
-
-/* ─────────────────────────────────────────────────────────────
-   Status Badge
-───────────────────────────────────────────────────────────── */
-const STATUS_MAP = {
-  accepted: { dot: "#16a34a", label: "Confermato" },
-  pending: { dot: "#d97706", label: "In attesa" },
-  rejected: { dot: "#dc2626", label: "Rifiutato" },
-};
-
-const StatusBadge = ({ status }) => {
-  const s = STATUS_MAP[status] ?? { dot: "#94a3b8", label: status };
-  return (
-    <span className="flex items-center gap-1.5">
-      <span
-        className="w-1.5 h-1.5 rounded-full shrink-0"
-        style={{ background: s.dot }}
-      />
-      <span className="text-[10px] font-semibold" style={{ color: s.dot }}>
-        {s.label}
-      </span>
-    </span>
-  );
-};
 
 const EMPTY_MAP = {
   programma: {
@@ -119,6 +86,9 @@ const Profile = () => {
   if (loading?.profile) return <RenderLoadingState type="profile" />;
   if (error?.profile)
     return <RenderErrorState type="profile" reloadFunction={getProfileData} />;
+  if (loading?.log_out) return <RenderLoadingState type="log_out" />;
+  if (error?.log_out)
+    return <RenderErrorState type="log_out" reloadFunction={getProfileData} />;
 
   const now = new Date();
   const allEvents = [...(profileData?.newEventsData ?? [])];
@@ -148,11 +118,18 @@ const Profile = () => {
   const handleLogoutUser = async () => {
     const isGuest = session?.user.is_anonymous;
     const token = session?.access_token;
-    console.log(session);
-    if (isGuest) {
-      await ApiCalls.deleteGuest(token);
-    }
-    LogoutUser();
+
+    executeApiCall(
+      "log_out",
+      async () => {
+        if (isGuest) {
+          await ApiCalls.deleteGuest(token);
+        }
+      },
+      () => {
+        LogoutUser();
+      },
+    );
   };
   return (
     <div className="flex flex-col bg-bg-1">

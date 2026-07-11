@@ -95,6 +95,7 @@ const getAll = async (req) => {
       });
       return acc;
     }, {});
+
     if (eventParticipantsError) throw eventParticipantsError;
 
     const finalData = eventsList.map((e) => {
@@ -103,6 +104,7 @@ const getAll = async (req) => {
         partecipanti: eventParticipantsMap[e?.event_id],
       };
     });
+    console.log("adesso2", EVENTSINPAGE, finalData.length);
     return { data: finalData, error: null };
   } catch (err) {
     return { data: null, error: err };
@@ -366,6 +368,7 @@ const modifyResponse = async (req) => {
 };
 const getSuspended = async (req) => {
   try {
+    const EVENTSINPAGE = 12;
     const { offset } = req.body;
     const user = req.user;
     const { data: eventsList, error: eventsListError } = await supabase

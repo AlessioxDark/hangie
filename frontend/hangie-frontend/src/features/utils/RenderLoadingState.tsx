@@ -46,6 +46,10 @@ const RenderLoadingState = ({ type }) => {
       main: "Autenticazione in corso...",
       alt: "Ci vorra solo un secondo!",
     },
+    log_out: {
+      main: "Uscita in corso...",
+      alt: "",
+    },
   };
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 w-full h-full ">

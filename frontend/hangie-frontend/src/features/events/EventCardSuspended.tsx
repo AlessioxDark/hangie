@@ -139,190 +139,174 @@ const EventCardSuspended: React.FC<EventCardSuspendedProps> = ({
 
   return (
     <article
-      className={`
-        group
-        flex flex-col
-        bg-bg-1
-        border border-gray-200
-        rounded-2xl
-        overflow-hidden
-        shadow-sm
-        hover:shadow-2xl
-        hover:-translate-y-2
-        hover:border-gray-300
-        transition-all duration-300
-        cursor-pointer
-        w-full
-     
-       
-      `}
-      onClick={() => navigate(`/events/${event_id}`)}
+      className="
+      flex flex-col bg-bg-1 border border-neutral-300/60 rounded-xl overflow-hidden relative
+      shadow-[0_2px_8px_rgba(15,23,42,0.04)] w-full
+    "
     >
+      {/* AREA NAVIGAZIONE: Cliccando qui vai al dettaglio dell'evento */}
       <div
-        className="
-        flex items-center justify-between gap-4
-        2xl:px-6 p-4 pb-0
-        from-blue-50 to-purple-50
-      
-      "
+        onClick={() => navigate(`/events/${event_id}`)}
+        className="flex flex-col w-full transition-all duration-200 active:bg-bg-2/40 cursor-pointer"
       >
-        {gruppo && (
-          <div className=" max-w-[90%]">
-            <div className="px-3 py-1.5 2xl:py-2 bg-black/60 backdrop-blur-md rounded-xl shadow-lg">
-              <div className="flex items-center gap-2">
+        {/* Header Info: Badge Gruppo e Urgenza Scadenza */}
+        <div className="flex items-center justify-between gap-4 p-4 pb-0">
+          {gruppo ? (
+            <div className="max-w-[70%]">
+              <div className="px-2.5 py-1 bg-text-1/85 backdrop-blur-md rounded-lg shadow-sm flex items-center gap-1.5">
                 <GroupIcon
                   group_cover_img={gruppo.group_cover_img}
-                  className="w-6 h-6"
+                  className="w-4 h-4 rounded-md"
                 />
-
-                <span className="text-xs 2xl:text-sm font-bold text-bg-1 truncate">
+                <span className="text-xs font-bold text-bg-1 truncate font-title">
                   {gruppo.nome}
                 </span>
               </div>
             </div>
+          ) : (
+            <div />
+          )}
+
+          <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-lg flex-shrink-0">
+            <svg
+              className="w-3.5 h-3.5 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-[11px] font-body font-bold text-primary whitespace-nowrap">
+              {getUrgencyText()}
+            </span>
           </div>
-        )}
-
-        <div
-          className={`
-          flex items-center gap-2
-          px-3 py-2
-          bg-primary
-          rounded-xl
-          flex-shrink-0
-          
-        `}
-        >
-          <svg
-            className="w-4 h-4 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span className="text-xs 2xl:text-sm  font-body font-bold text-white whitespace-nowrap ">
-            {getUrgencyText()}
-          </span>
         </div>
-      </div>
 
-      <div className="2xl:p-6 p-4 pt-2.5 flex flex-col justify-between h-full ">
-        <div className="flex flex-col gap-2 2xl:gap-4">
-          <div className="flex flex-col ">
-            <time className="text-xs 2xl:text-base block text-primary font-semibold uppercase tracking-wider">
+        {/* Dettagli Centrali dell'invito */}
+        <div className="p-4 pb-3 flex flex-col gap-4">
+          {/* Data e Titolo */}
+          <div className="flex flex-col gap-1">
+            <time className="text-[11px] block text-primary font-semibold uppercase tracking-wider font-title">
               {formattedTime}
             </time>
             <h3
-              className={`text-base 2xl:text-2xl font-bold text-text-1 leading-tight ${line_clamp}`}
+              className={`text-base font-bold font-body text-text-1 leading-tight ${line_clamp}`}
             >
               {titolo}
             </h3>
           </div>
 
-          <div className="ml-1 2xl:ml-2">
-            <div className="flex items-center gap-2 2xl:gap-4 ">
-              <div className=" 2xl:w-7 2xl:h-7 w-5 h-5 flex-shrink-0 text-gray-400">
-                <ParticipantsIcon color={"#64748b"} />
-              </div>
+          {/* Lista Partecipanti */}
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 flex-shrink-0 text-text-2">
+              <ParticipantsIcon color="currentColor" />
+            </div>
 
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               {risposteAccepted.length > 0 ? (
-                <div className="flex items-center 2xl:gap-2.5 gap-1.5 flex-1 min-w-0">
-                  {risposteAccepted.slice(0, 3).map((partecipante) => {
-                    return (
-                      <div className="flex -space-x-2 flex-shrink-0">
-                        <div
-                          className="2xl:w-7 2xl:h-7 w-5 h-5"
-                          key={partecipante.user_id}
-                        >
-                          <ProfileIcon
-                            profile_pic={partecipante.utenti.profile_pic}
-                          />
-                        </div>
+                <>
+                  <div className="flex -space-x-1.5 flex-shrink-0">
+                    {risposteAccepted.slice(0, 3).map((partecipante) => (
+                      <div
+                        className="w-5 h-5 rounded-full border border-bg-1 overflow-hidden"
+                        key={partecipante.user_id}
+                      >
+                        <ProfileIcon
+                          profile_pic={partecipante.utenti.profile_pic}
+                        />
                       </div>
-                    );
-                  })}
-                  <span className="text-sm 2xl:text-base text-text-2 font-medium truncate">
+                    ))}
+                    {risposteAccepted.length > 3 && (
+                      <div className="w-5 h-5 rounded-full border border-bg-1 bg-bg-3 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[9px] font-bold text-text-2">
+                          +{risposteAccepted.length - 3}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-xs text-text-2 font-body font-medium truncate">
                     {risposteAccepted.length} partecipant
                     {risposteAccepted.length !== 1 ? "i" : "e"}
                   </span>
-                </div>
+                </>
               ) : (
-                <span className="text-base text-gray-500">
+                <span className="text-xs text-text-3 font-body">
                   Nessun partecipante ancora
                 </span>
               )}
             </div>
           </div>
         </div>
+      </div>
 
-        <div>
-          <div className="pb-1 pt-3 2xl:pb-2 2xl:pt-4  ">
-            <div className="flex items-center gap-3">
-              <div className="2xl:w-12 2xl:h-12 w-8 h-8 flex-shrink-0">
-                <ProfileIcon profile_pic={utente.profile_pic} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm 2xl:text-base font-semibold text-text-2 truncate">
-                  {utente.nome}
-                </p>
-              </div>
-            </div>
+      {/* AREA AZIONI RAPIDE: Isolata dal click superiore per funzionare all'istante */}
+      <div className="px-4 pb-4 flex flex-col gap-3">
+        {/* Separatore orizzontale coerente e Info Organizzatore */}
+        <div className="w-full h-[1px] bg-bg-3/50"></div>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 flex-shrink-0 rounded-full overflow-hidden">
+            <ProfileIcon profile_pic={utente.profile_pic} />
           </div>
+          <p className="text-xs font-semibold text-text-2 truncate font-body">
+            {utente.nome}{" "}
+            <span className="text-[11px] text-text-3 font-normal font-body">
+              ti ha invitato
+            </span>
+          </p>
+        </div>
 
-          <div className="pt-2.5 2xl:pt-5  border-t border-gray-100 ">
-            <div className="flex gap-3">
-              <button
-                className={`flex-1 ${status == "accepted" ? "bg-primary text-white" : "bg-gray-50 text-gray-400 border border-gray-200"} font-bold py-2.5 rounded-xl   active:scale-[0.97] transition-all duration-200 flex items-center justify-center cursor-pointer text-sm`}
-                disabled={scadenza < Date.now()}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newStatus =
-                    status == "accepted" ? "pending" : "accepted";
+        {/* Pulsanti di Voto Accetta / Rifiuta */}
+        <div className="flex gap-2 mt-1">
+          <button
+            // disabled={isScaduto}
+            onClick={(e) => {
+              e.stopPropagation();
+              const newStatus = status === "accepted" ? "pending" : "accepted";
+              handleEventDecision(event_id, { status: newStatus }, () => {
+                sendSocketVoteEvent(newStatus, prevStatus);
+                setPrevStatus(newStatus);
+              });
+            }}
+            className={`
+            flex-1 font-bold py-2.5 rounded-xl transition-all duration-200 text-xs font-body active:scale-[0.96] cursor-pointer
+            ${
+              status === "accepted"
+                ? "bg-primary text-white shadow-sm shadow-primary/20"
+                : "bg-bg-2 text-text-2 border border-bg-3/60"
+            }
+            disabled:opacity-50 disabled:active:scale-100
+          `}
+          >
+            Accetta
+          </button>
 
-                  handleEventDecision(
-                    event_id,
-                    {
-                      status: newStatus,
-                    },
-                    () => {
-                      sendSocketVoteEvent(newStatus, prevStatus);
-                      setPrevStatus(newStatus);
-                    },
-                  );
-                }}
-              >
-                Accetta Invito
-              </button>
-              <button
-                disabled={scadenza < Date.now()}
-                className={`flex-1 ${status == "rejected" ? "bg-red-500 text-white" : "bg-gray-50 text-gray-400 border border-gray-200"} font-bold py-2.5 rounded-xl   active:scale-[0.97] transition-all duration-200 flex items-center justify-center cursor-pointer text-sm`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newStatus =
-                    status == "rejected" ? "pending" : "rejected";
-
-                  handleEventDecision(
-                    event_id,
-                    {
-                      status: newStatus,
-                    },
-                    () => {
-                      sendSocketVoteEvent(newStatus, prevStatus);
-                      setPrevStatus(newStatus);
-                    },
-                  );
-                }}
-              >
-                Rifiuta
-              </button>
-            </div>
-          </div>
+          <button
+            // disabled={isScaduto}
+            onClick={(e) => {
+              e.stopPropagation();
+              const newStatus = status === "rejected" ? "pending" : "rejected";
+              handleEventDecision(event_id, { status: newStatus }, () => {
+                sendSocketVoteEvent(newStatus, prevStatus);
+                setPrevStatus(newStatus);
+              });
+            }}
+            className={`
+            flex-1 font-bold py-2.5 rounded-xl transition-all duration-200 text-xs font-body active:scale-[0.96] cursor-pointer
+            ${
+              status === "rejected"
+                ? "bg-red-500 text-white shadow-sm shadow-red-500/20"
+                : "bg-bg-2 text-text-2 border border-bg-3/60"
+            }
+            disabled:opacity-50 disabled:active:scale-100
+          `}
+          >
+            Rifiuta
+          </button>
         </div>
       </div>
     </article>

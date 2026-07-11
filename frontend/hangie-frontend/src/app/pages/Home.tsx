@@ -131,65 +131,66 @@ const Home = () => {
   );
 
   return (
-    <div className="min-h-screen  flex ">
-      <div className="flex-1">
-        <main ref={sliderRef} className=" ">
-          <div className=" flex flex-col gap-16">
-            <section>
-              <div className="flex justify-between items-center mb-5 2xl:mb-8">
-                <div className="w-full">
-                  <div className="w-full justify-between flex flex-row ">
-                    <h2 className="text-xl 2xl:text-4xl font-bold font-body text-text-1 mb-1 2xl:mb-2">
-                      Eventi in Sospeso
-                    </h2>
+    <div className="min-h-screen bg-bg-main px-4 py-5 flex flex-col">
+      <main ref={sliderRef} className="flex-1">
+        <div className="flex flex-col gap-10">
+          {/* SEZIONE: Eventi in Sospeso */}
+          <section aria-labelledby="pending-events-title">
+            <div className="flex items-end justify-between mb-4">
+              <div>
+                <h2
+                  id="pending-events-title"
+                  className="text-xl font-bold font-body text-text-1 tracking-tight mb-0.5"
+                >
+                  Eventi in Sospeso
+                </h2>
+                <p className="text-xs font-body text-text-2">
+                  Hai{" "}
+                  <span className="font-semibold text-primary">
+                    {homeEventsData.pending?.length} invit
+                    {homeEventsData.pending?.length === 1 ? "o" : "i"}
+                  </span>{" "}
+                  in attesa
+                </p>
+              </div>
 
-                    <Link
-                      to={"/events/suspended/all"}
-                      className="flex flex-row 2xl:gap-1 items-center cursor-pointer"
-                    >
-                      <span className="text-primary font-semibold text-base 2xl:text-2xl font-body">
-                        Vedi Tutti
-                      </span>
-                      <div className="w-5 h-5 2xl:w-10  2xl:h-10 flex items-center">
-                        <ChevronRight color={"#2463eb"} />
-                      </div>
-                    </Link>
-                  </div>
-                  <p className="text-sm 2xl:text-lg font-body text-text-2 leading-4">
-                    Hai{" "}
-                    <span className=" font-semibold text-primary font-body">
-                      {homeEventsData.pending?.length} invit
-                      {homeEventsData.pending?.length > 1 ? "i" : "o"}
-                    </span>{" "}
-                    in attesa
-                  </p>
+              <Link
+                to="/events/suspended/all"
+                className="group flex items-center gap-0.5 text-primary font-semibold text-sm font-body active:opacity-70 transition-opacity"
+              >
+                <span>Vedi Tutti</span>
+                <div className="w-5 h-5 flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                  <ChevronRight color="#2463eb" />
                 </div>
-              </div>
-              {renderContent("pending")}
-            </section>
+              </Link>
+            </div>
 
-            <section>
-              <div className="flex justify-between items-center mb-4 2xl:mb-8">
-                <div>
-                  <h2 className="text-xl 2xl:text-4xl font-bold font-body text-text-1 mb-1 2xl:mb-2">
-                    I tuoi Prossimi Eventi
-                  </h2>
-                  <p className="text-sm 2xl:text-lg text-text-2 leading-4 font-body">
-                    <span className="font-semibold text-text-1 font-body">
-                      {homeEventsData.accepted?.length} event
-                      {homeEventsData.accepted?.length > 1 ? "i" : "o"}
-                    </span>{" "}
-                    nelle prossime settimane
-                  </p>
-                </div>
-              </div>
-              <div className=" xs:mb-24 xl:mb-0">
-                {renderContent("accepted")}
-              </div>
-            </section>
-          </div>
-        </main>
-      </div>
+            <div>{renderContent("pending")}</div>
+          </section>
+
+          {/* SEZIONE: Prossimi Eventi */}
+          <section aria-labelledby="upcoming-events-title">
+            <div className="mb-4">
+              <h2
+                id="upcoming-events-title"
+                className="text-xl font-bold font-body text-text-1 tracking-tight mb-0.5"
+              >
+                I tuoi Prossimi Eventi
+              </h2>
+              <p className="text-xs text-text-2 font-body">
+                <span className="font-semibold text-text-1">
+                  {homeEventsData.accepted?.length} event
+                  {homeEventsData.accepted?.length === 1 ? "o" : "i"}
+                </span>{" "}
+                nelle prossime settimane
+              </p>
+            </div>
+
+            {/* pb-24 serve per non far finire il contenuto sotto l'eventuale Bottom Navigation Bar mobile */}
+            <div className="pb-24">{renderContent("accepted")}</div>
+          </section>
+        </div>
+      </main>
     </div>
   );
 };

@@ -43,7 +43,7 @@ const getAllEvents = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: "Non siamo riusciti a trovare i tuoi eventi", // Messaggio generico per l'utente
+      message: "Non siamo  a trovare i tuoi eventi", // Messaggio generico per l'utente
       details: err.message,
     });
   }
@@ -92,7 +92,7 @@ const getSpecificEvent = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: "Non siamo riusciti a trovare il tuo evento", // Messaggio generico per l'utente
+      message: "Non siamo a trovare il tuo evento", // Messaggio generico per l'utente
       details: err.message,
     });
   }

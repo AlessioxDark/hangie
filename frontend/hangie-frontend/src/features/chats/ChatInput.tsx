@@ -15,7 +15,6 @@ const ChatInput = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const debounceTimerRef = useRef(null);
-  const { openModal } = useModal();
   const { setMobileView } = useMobileLayout();
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);

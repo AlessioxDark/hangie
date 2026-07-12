@@ -78,7 +78,6 @@ export const ChatProvider = ({ children }) => {
 
   const fetchEvents = useCallback(async (): Promise<void> => {
     const saveData = (data) => {
-
       setHomeEventsData((prevData) => {
         const mergeAccepted = [...prevData.accepted, ...data.accepted];
         const dedupAccepted = Array.from(
@@ -88,7 +87,6 @@ export const ChatProvider = ({ children }) => {
         const dedupPending = Array.from(
           new Map(mergePending.map((item) => [item.event_id, item])).values(),
         );
-
 
         return {
           pending: dedupPending,
@@ -123,7 +121,6 @@ export const ChatProvider = ({ children }) => {
   );
   const fetchGroups = useCallback(async () => {
     const saveData = (data) => {
-
       setGroupsData(data);
     };
     executeApiCall(
@@ -136,7 +133,6 @@ export const ChatProvider = ({ children }) => {
   }, [session, executeApiCall]);
   const fetchChat = useCallback(
     async (groupId: UUID) => {
-
       if (!groupId || !session || isAuthLoading) return;
 
       const saveData = (groupData) => {
@@ -180,7 +176,17 @@ export const ChatProvider = ({ children }) => {
       () => {
         return ApiCalls.voteEvent(eventId, session.access_token, body);
       },
-      saveData,
+      (data) => {
+        // 1. Esegui il callback del socket passato dal componente
+        saveData(data);
+
+        // 2. Aggiorna lo stato locale degli eventi della Home per spostare l'evento nel tab corretto
+        setHomeEventsData((prev) => {
+          // Logica di spostamento dell'array (pending -> accepted / rejected)
+          // basata sull'eventId e sul body.status inviato.
+          return { ...prev };
+        });
+      },
     );
   };
 

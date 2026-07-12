@@ -68,56 +68,85 @@ export const SocketProvider = ({ children }) => {
     });
     socket.on("receive_message", (data) => {
       const isMe = data.sender_id === session?.user?.id;
-      const newMessage = {
-        message_id: data.message_id,
+      const targetGroupId = String(data.group_id);
+
+      const finalMessage = {
+        message_id: data.message_id, // ID definitivo del Database
         content: data.message,
         group_id: data.group_id,
         user_id: data.sender_id,
         sent_at: Date.now(),
         isUser: isMe,
-        isSent: !isMe,
+        isSent: true, // Ora è confermato dal server
         isRead: false,
         utenti: data.sender,
       };
+
+      // 1. Aggiorna la lista dei gruppi (Sidebar)
       setGroupsData((prev) =>
         prev.map((g) =>
-          String(g.group_id) === data.group_id
+          String(g.group_id) === targetGroupId
             ? {
                 ...g,
-                ultimoMessaggio: newMessage,
+                ultimoMessaggio: finalMessage,
                 updated_at: new Date().toISOString(),
               }
             : g,
         ),
       );
-      setMessagesMap((messMap) => {
-        const existingMessages = messMap[data.group_id] || [];
 
-        return {
-          ...messMap,
-          [data.group_id]: [...existingMessages, newMessage],
-        };
-      });
-      if (data.group_id == currentGroup) {
+      // 2. Aggiorna la chat corrente con riconciliazione
+      if (String(currentGroup) === targetGroupId) {
         setCurrentChatData((prevData) => {
-          if (!prevData) {
-            return prevData;
+          if (!prevData) return prevData;
+
+          // Se l'ho inviato io, rimpiazzo il messaggio ottimistico usando il tempMessageId
+          if (isMe && data.tempMessageId) {
+            const messageExists = prevData.messaggi.some(
+              (m) => m.message_id === data.message_id,
+            );
+            if (messageExists) return prevData; // Evita duplicati se l'evento è già stato processato
+
+            return {
+              ...prevData,
+              messaggi: prevData.messaggi.map((m) =>
+                m.message_id === data.tempMessageId ? finalMessage : m,
+              ),
+            };
           }
 
-          if (!prevData || String(prevData.group_id) !== String(data.group_id))
-            return prevData;
-
-          // BLOCCA DUPLICATI: Se il messaggio esiste già (perché lo hai inviato tu ottimisticamente), non aggiungerlo
+          // Se lo ha inviato un altro utente, lo appendiamo normalmente (evitando duplicati)
           if (prevData.messaggi.some((m) => m.message_id === data.message_id))
             return prevData;
 
-          // Aggiungiamo il messaggio all'array
           return {
             ...prevData,
-            messaggi: [...prevData.messaggi, newMessage],
+            messaggi: [...prevData.messaggi, finalMessage],
           };
         });
       }
+
+      // 3. Aggiorna la mappa globale dei messaggi
+      setMessagesMap((messMap) => {
+        const groupMessages = messMap[data.group_id] || [];
+
+        if (isMe && data.tempMessageId) {
+          return {
+            ...messMap,
+            [data.group_id]: groupMessages.map((m) =>
+              m.message_id === data.tempMessageId ? finalMessage : m,
+            ),
+          };
+        }
+
+        if (groupMessages.some((m) => m.message_id === data.message_id))
+          return messMap;
+        return {
+          ...messMap,
+          [data.group_id]: [...groupMessages, finalMessage],
+        };
+      });
+
       if (!isMe) {
         socket.emit(
           "message_sent",
@@ -128,21 +157,39 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
-    // 3. ASCOLTA QUANDO I TUOI MESSAGGI ARRIVANO AGLI ALTRI (Doppia spunta per te)
+    // 3. ── ASCOLTO CONFERMA RICEZIONE (Doppia spunta) ──
     socket.on("message_arrived", (data) => {
+      const targetGroupId = String(data.group_id);
+
       setMessagesMap((messMap) => {
+        const groupMessages = messMap[data.group_id];
+        if (!groupMessages) return messMap;
+
+        // Ottimizzazione: se il messaggio è già segnato come inviato, evita il map
+        const targetMsg = groupMessages.find(
+          (m) => m.message_id === data.message_id,
+        );
+        if (targetMsg?.isSent) return messMap;
+
         return {
           ...messMap,
-          [data.group_id]: messMap[data.group_id]?.map((mess) => {
-            return mess.message_id === data.message_id
+          [data.group_id]: groupMessages.map((mess) =>
+            mess.message_id === data.message_id
               ? { ...mess, isSent: true }
-              : mess;
-          }),
+              : mess,
+          ),
         };
       });
-      if (currentGroup == data.group_id) {
+
+      if (String(currentGroup) === targetGroupId) {
         setCurrentChatData((prevData) => {
           if (!prevData) return prevData;
+
+          const hasUnsentTarget = prevData.messaggi.some(
+            (m) => m.message_id === data.message_id && !m.isSent,
+          );
+          if (!hasUnsentTarget) return prevData; // Evita re-render se è già true
+
           return {
             ...prevData,
             messaggi: prevData.messaggi.map((m) =>
@@ -152,7 +199,6 @@ export const SocketProvider = ({ children }) => {
         });
       }
     });
-
     socket.on("added_new_group", (groupId, data, participants, imgUrl) => {
       setGroupsData((prev) => {
         return [
@@ -556,157 +602,132 @@ export const SocketProvider = ({ children }) => {
       }
     });
     socket.on("voted_event", (data) => {
-      // notifica
+      const { event_id, group_id, status, sender_id, profile_pic } = data;
+      const isMe = sender_id === session.user.id;
 
-      const { event_id, group_id, status, sender_id, prevStatus, profile_pic } =
-        data;
-
-      if (sender_id == session.user.id) {
-        // bug con i partecipanti dell'evento al cambio per il sender
-
-        setHomeEventsData((prevEvents) => {
-          const eventToMove = prevEvents[prevStatus].find(
-            (e) => e.event_id == event_id,
-          );
-
-          return {
-            ...prevEvents,
-            [status]: [eventToMove, ...prevEvents[status]],
-            [prevStatus]: prevEvents[prevStatus].filter(
-              (e) => e.event_id !== event_id,
-            ),
-          };
-        });
-
-        if (currentEventData && currentEventData.event_id == event_id) {
-          setCurrentEventData((prev) => {
-            const newResponses = prev.risposte_evento.filter(
-              (r) => r.utenti.user_id !== sender_id,
-            );
-
-            const newRisposte = [
-              ...newResponses,
-              { status, utenti: { user_id: sender_id, profile_pic } },
-            ];
-            return { ...prev, risposte_evento: newRisposte };
-          });
-        }
-      }
-      if (currentGroup == group_id) {
-        setGroupEventsData((prevEvents) => {
-          if (!prevEvents) return null;
-          return prevEvents.map((e) => {
-            if (e.event_id == event_id) {
-              const newRisposte = e.risposte_evento.map((r) => {
-                return r.user_id == sender_id
-                  ? { ...r, status, user_id: sender_id, profile_pic }
-                  : r;
-              });
-
-              return {
-                ...e,
-                risposte_evento: [...newRisposte],
-                status: session.user.id == sender_id ? status : e.status,
-                profile_pic,
-              };
-            }
-            return e;
-          });
-        });
-      }
-
-      setHomeEventsData((prevEvents) => {
-        const prevCategory = (
-          Object.keys(prevEvents) as Array<keyof typeof prevEvents>
-        ).find((cat) => prevEvents[cat].some((e) => e.event_id === event_id));
-
-        if (!prevCategory) return prevEvents; // Se non lo trova, non fare nulla
-
-        // 2. Trova l'oggetto evento originale
-        const eventToUpdate = prevEvents[prevCategory].find(
-          (e) => e.event_id === event_id,
-        );
-        if (!eventToUpdate) return prevEvents;
-
-        // 3. Crea il nuovo oggetto evento con le risposte aggiornate
-        const updatedEvent = {
-          ...eventToUpdate,
-          status: session.user.id === sender_id ? status : eventToUpdate.status,
-          risposte_evento: eventToUpdate.risposte_evento.map((r) =>
-            r.utenti.user_id === session.user.id
-              ? { ...r, status: status, profile_pic } // Aggiorna solo lo stato dell'utente corrente
-              : r,
-          ),
-        };
-
-        // 4. Se l'utente loggato è colui che ha cambiato stato, sposta l'evento di categoria
-        if (session.user.id === sender_id) {
-          const newCategory = status as keyof typeof prevEvents;
-
-          return {
-            ...prevEvents,
-            // Rimuovi dalla vecchia categoria
-            [prevCategory]: prevEvents[prevCategory].filter(
-              (e) => e.event_id !== event_id,
-            ),
-            // Aggiungi alla nuova categoria (evitando duplicati per sicurezza)
-            [newCategory]: [
-              ...prevEvents[newCategory].filter((e) => e.event_id !== event_id),
-              updatedEvent,
-            ],
-          };
-        }
-
-        // 5. Se è stato un altro utente, aggiorna l'evento restando nella stessa categoria
-        return {
-          ...prevEvents,
-          [prevCategory]: prevEvents[prevCategory].map((e) =>
-            e.event_id === event_id ? updatedEvent : e,
-          ),
-        };
-      });
+      // 1. CHAT MESSAGES: Ottimizzazione con uscita anticipata
       setCurrentChatData((prevData) => {
-        if (!prevData) return prevData;
-        const newMessaggi = prevData.messaggi.map((m) => {
-          if (m.type == "event" && m.event_id == event_id) {
-            const newRisposte = m.event_details.risposte_evento.map((r) => {
-              return r.utenti?.user_id == sender_id
-                ? { ...r, status, profile_pic }
-                : r;
-            });
+        if (!prevData?.messaggi) return prevData;
+
+        // Controlliamo prima se esiste almeno un messaggio di tipo event correlato
+        const hasEventMessage = prevData.messaggi.some(
+          (m) => m.type === "event" && m.event_id === event_id,
+        );
+        if (!hasEventMessage) return prevData; // Se non c'è, risparmiamo un .map completo su tutta la chat
+
+        return {
+          ...prevData,
+          messaggi: prevData.messaggi.map((m) => {
+            if (m.type !== "event" || m.event_id !== event_id) return m;
 
             return {
               ...m,
               event_details: {
                 ...m.event_details,
-                status:
-                  session.user.id == sender_id
-                    ? status
-                    : m.event_details.status,
-                risposte_evento: newRisposte,
+                status: isMe ? status : m.event_details.status,
+                risposte_evento: m.event_details.risposte_evento.map((r) =>
+                  r.utenti?.user_id === sender_id
+                    ? { ...r, status, profile_pic }
+                    : r,
+                ),
               },
             };
-          }
-          return m;
-        });
-        return {
-          ...prevData,
-          messaggi: newMessaggi,
+          }),
         };
       });
-      if (currentEventData.event_id == event_id) {
-        setCurrentEventData((event) => {
-          const newRisposte = event.risposte_evento.map((r) => {
-            return r.utenti.user_id == sender_id
-              ? {
-                  ...r,
-                  status,
-                  user_id: sender_id,
-                  utenti: { user_id: sender_id, profile_pic },
-                }
-              : r;
+
+      // 2. DETTAGLIO EVENTO CORRENTE: Esegui solo se la pagina dell'evento specifico è aperta
+      if (currentEventData?.event_id === event_id) {
+        setCurrentEventData((prev) => {
+          if (!prev) return prev;
+          const exists = prev.risposte_evento.some(
+            (r) => r.utenti?.user_id === sender_id,
+          );
+          return {
+            ...prev,
+            status: isMe ? status : prev.status,
+            risposte_evento: exists
+              ? prev.risposte_evento.map((r) =>
+                  r.utenti?.user_id === sender_id
+                    ? { ...r, status, utenti: { ...r.utenti, profile_pic } }
+                    : r,
+                )
+              : [
+                  ...prev.risposte_evento,
+                  { status, utenti: { user_id: sender_id, profile_pic } },
+                ],
+          };
+        });
+      }
+
+      // 3. HOME EVENTS
+      setHomeEventsData((prevEvents) => {
+        let currentCategory = null;
+
+        // Ricerca della categoria senza fare Object.keys ad ogni render
+        if (prevEvents.pending.some((e) => e.event_id === event_id))
+          currentCategory = "pending";
+        else if (prevEvents.accepted.some((e) => e.event_id === event_id))
+          currentCategory = "accepted";
+        else if (prevEvents.rejected.some((e) => e.event_id === event_id))
+          currentCategory = "rejected";
+
+        if (!currentCategory) return prevEvents;
+
+        const eventToUpdate = prevEvents[currentCategory].find(
+          (e) => e.event_id === event_id,
+        );
+        if (!eventToUpdate) return prevEvents;
+
+        const updatedEvent = {
+          ...eventToUpdate,
+          status: isMe ? status : eventToUpdate.status,
+          risposte_evento: eventToUpdate.risposte_evento.map((r) =>
+            r.utenti?.user_id === sender_id ? { ...r, status, profile_pic } : r,
+          ),
+        };
+
+        if (isMe && currentCategory !== status) {
+          return {
+            ...prevEvents,
+            [currentCategory]: prevEvents[currentCategory].filter(
+              (e) => e.event_id !== event_id,
+            ),
+            [status]: [
+              updatedEvent,
+              ...prevEvents[status].filter((e) => e.event_id !== event_id),
+            ],
+          };
+        }
+
+        return {
+          ...prevEvents,
+          [currentCategory]: prevEvents[currentCategory].map((e) =>
+            e.event_id === event_id ? updatedEvent : e,
+          ),
+        };
+      });
+
+      // 4. GROUP EVENTS
+      if (currentGroup === group_id) {
+        setGroupEventsData((prevEvents) => {
+          if (!prevEvents) return null;
+          // Aggiorna solo se l'evento appartiene a questa lista
+          if (!prevEvents.some((e) => e.event_id === event_id))
+            return prevEvents;
+
+          return prevEvents.map((e) => {
+            if (e.event_id !== event_id) return e;
+            return {
+              ...e,
+              status: isMe ? status : e.status,
+              risposte_evento: e.risposte_evento.map((r) =>
+                r.utenti?.user_id === sender_id || r.user_id === sender_id
+                  ? { ...r, status, profile_pic }
+                  : r,
+              ),
+            };
           });
-          return { ...event, risposte_evento: newRisposte };
         });
       }
     });

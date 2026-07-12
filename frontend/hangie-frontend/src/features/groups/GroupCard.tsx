@@ -61,48 +61,57 @@ const GroupCard = ({
   }).length;
   return (
     <div
-      className={`bg-bg-2 p-3 flex items-center w-full 
-    cursor-pointer 
-    
-    transition-colors
-    border-2 border-y border-neutral-200 ${
-      currentGroup == group_id
-        ? "bg-neutral-200/80" // Grigio solido per la selezione
-        : "bg-white  hover:bg-gray-100 active:bg-gray-100"
-    }`}
       onClick={() => {
         navigate(`/chats/${group_id}`);
         setCurrentGroupData(fullGroup);
-        ("cliccato card cambiati stati");
       }}
+      className={`
+      w-full p-3.5 flex items-center rounded-xl border cursor-pointer
+      transition-all duration-150 
+      ${
+        currentGroup === group_id
+          ? "bg-primary/10 border-primary/30" // Stato selezionato coerente
+          : "bg-bg-1 border-bg-3/60 active:bg-bg-2/70"
+      }
+    `}
     >
-      <div className="flex flex-row items-stretch w-full h-full gap-4 ">
+      <div className="flex flex-row items-center w-full h-full gap-3">
+        {/* Immagine Profilo Gruppo */}
         {displayImage == null ? (
-          <div className="rounded-full w-12 h-12 2xl:h-16 2xl:w-16 flex-shrink-0">
+          <div className="rounded-full w-12 h-12 flex-shrink-0 bg-bg-2 overflow-hidden">
             <DefaultGroupIcon />
           </div>
         ) : (
           <img
             src={displayImage}
-            className="rounded-full w-12 h-12 2xl:h-16 2xl:w-16 flex-shrink-0"
+            className="rounded-full w-12 h-12 flex-shrink-0 object-cover"
             alt="Group cover"
           />
         )}
-        <div className="flex-1 min-w-0 flex flex-col gap-1.5 ">
-          <div className="flex justify-between ">
-            <h1 className="font-bold font-body text-lg leading-4">{nome}</h1>
 
-            <span className="text-text-3 text-sm flex-shrink-0 ml-4 font-body">
+        {/* Dettagli della Chat */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          {/* Riga Superiore: Nome Gruppo e Orario */}
+          <div className="flex justify-between items-baseline gap-2">
+            <h2 className="font-bold font-title text-base text-text-1 truncate">
+              {nome}
+            </h2>
+            <span className="text-text-3 text-[11px] font-body font-medium flex-shrink-0">
               {formatTime(ultimoMessaggio?.sent_at || created_at)}
             </span>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-text-2 font-body 2xl:text-lg leading-5 line-clamp-1 mr-2">
-              {`${ultimoMessaggio?.type == "event" ? "evento: " : ""}${ultimoMessaggio?.content}`}
-            </span>
+          {/* Riga Inferiore: Ultimo Messaggio e Notifica */}
+          <div className="flex justify-between items-center gap-2">
+            <p className="text-text-2 font-body text-sm leading-tight line-clamp-1 flex-1">
+              {ultimoMessaggio?.type === "event" && (
+                <span className="text-primary font-bold">evento: </span>
+              )}
+              {ultimoMessaggio?.content || "Nessun messaggio"}
+            </p>
+
             {unreadMsgNotifications > 0 && (
-              <div className="bg-primary  flex items-center justify-center w-6 h-6 text-center font-bold text-white rounded-full text-base flex-shrink-0">
+              <div className="bg-primary flex items-center justify-center min-w-[20px] h-5 px-1.5 font-body font-bold text-white rounded-full text-[10px] flex-shrink-0 animate-pulse-slow shadow-sm shadow-primary/20">
                 {unreadMsgNotifications}
               </div>
             )}

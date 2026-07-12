@@ -58,7 +58,7 @@ const FormInput = ({ id, label, type, placeholder, register, error }) => {
           />
         </div>
         {error?.message && (
-          <p className="text-sm font-semibold font-body text-error  px-1.5">
+          <p className="text-[11px] font-body font-bold text-red-500 pl-1.5 mt-0.5 animate-in fade-in slide-in-from-top-1 duration-100">
             {error.message}
           </p>
         )}

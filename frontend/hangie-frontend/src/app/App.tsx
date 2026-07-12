@@ -27,7 +27,6 @@ import { ScreenProvider } from "@/contexts/ScreenContext";
 import { SocketProvider } from "@/contexts/SocketContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ApiContextProvider } from "@/contexts/ApiContext";
-import EventDetailsMobile from "@/features/events/EventDetailsMobile";
 import AppRouter from "./AppRouter";
 import { FriendsProvider } from "@/contexts/FriendsContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";

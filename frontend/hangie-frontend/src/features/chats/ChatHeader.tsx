@@ -23,21 +23,24 @@ const ChatHeader = () => {
 
   const navigate = useNavigate();
   return (
-    <div className="bg-bg-1 p-2 items-center 2xl:p-4  border-b border-neutral-300 flex flex-row  justify-between sticky top-0">
-      <div className="flex flex-row gap-1 items-center flex-1">
-        {currentScreen == "xs" && (
-          <div
-            className="w-7 h-7 flex-shrink-0 flex items-center justify-center"
-            onClick={() => {
-              setCurrentGroup(null);
-              navigate(-1);
-            }}
-          >
-            <ChevronLeft color={"#2463eb"} />
-          </div>
-        )}
+    <div className="w-full bg-bg-1 p-3 flex flex-row justify-between items-center border-b border-neutral-300/60 sticky top-0 z-50">
+      {/* Sezione Sinistra: Back, Avatar e Info Gruppo */}
+      <div className="flex flex-row gap-2 items-center min-w-0 flex-1">
+        {/* Pulsante Torna Indietro */}
+        <button
+          className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full text-primary active:bg-bg-2/70 transition-colors cursor-pointer"
+          onClick={() => {
+            setCurrentGroup(null);
+            navigate(-1);
+          }}
+          aria-label="Torna alle chat"
+        >
+          <ChevronLeft color="currentColor" />
+        </button>
+
+        {/* Info Gruppo (Cliccabile per i dettagli) */}
         <div
-          className="flex flex-row items-center gap-3 2xl:gap-6  flex-grow"
+          className="flex flex-row items-center gap-3 min-w-0 flex-1 active:opacity-75 transition-opacity cursor-pointer"
           onClick={() => {
             navigate(`/chats/${currentGroupData?.group_id}/details`);
           }}
@@ -46,38 +49,39 @@ const ChatHeader = () => {
             <img
               src={displayImage}
               loading="eager"
-              className="w-10 h-10 2xl:w-16 2xl:h-16 rounded-full"
-              alt=""
+              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              alt="Avatar del gruppo"
             />
           ) : (
-            <div className="w-10 h-10 2xl:w-16 2xl:h-16 rounded-full">
+            <div className="w-10 h-10 rounded-full flex-shrink-0 bg-bg-2 overflow-hidden">
               <DefaultGroupIcon />
             </div>
           )}
-          <div className="flex flex-col gap-0.5">
-            <span className="text-text-1 font-bold font-body text-xl 2xl:text-3xl leading-4">
+
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-text-1 font-title font-bold text-base leading-tight truncate">
               {currentGroupData?.nome}
-            </span>
-            <div className="flex flex-row">
-              <span className="font-body text-text-1 text-xs line-clamp-1 opacity-70">
-                {currentGroupData?.partecipanti_gruppo
-                  ?.map((p) => p.utenti.nome)
-                  .join(", ")}
-              </span>
-            </div>
+            </h1>
+            <p className="font-body text-text-3 text-[11px] line-clamp-1">
+              {currentGroupData?.partecipanti_gruppo
+                ?.map((p) => p.utenti.nome)
+                .join(", ")}
+            </p>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-1">
+
+      {/* Sezione Destra: Pulsante Calendario Eventi */}
+      <div className="flex items-center ml-2 flex-shrink-0">
         <button
           onClick={() => {
             navigate(`/chats/${currentGroupData.group_id}/events`);
           }}
-          className="relative p-2.5 rounded-full bg-[#D9EAFF] active:bg-indigo-100 transition-all group"
-          title="Vedi Eventi"
+          className="p-2.5 rounded-full bg-primary/10 text-primary active:scale-[0.93] active:bg-primary/20 transition-all cursor-pointer shadow-sm shadow-primary/5"
+          aria-label="Vedi eventi del gruppo"
         >
-          <div className="w-6 h-6">
-            <CalendarIcon color={"#2463eb"} />
+          <div className="w-5 h-5">
+            <CalendarIcon color="currentColor" />
           </div>
         </button>
       </div>

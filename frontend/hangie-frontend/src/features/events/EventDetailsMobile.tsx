@@ -307,15 +307,19 @@ const EventDetailsMobile = () => {
                 <h2 className="font-body font-bold text-text-1 text-lg">
                   Descrizione
                 </h2>
-                <p className="text-text-2 text-sm font-body">
-                  {isExpanded ? descrizione : descrizione.slice(0, 250)}
-                  <span
-                    onClick={() => setIsExpanded((prev) => !prev)}
-                    className="text-primary font-medium"
-                  >
-                    {descrizione.length > 250 &&
-                      `Leggi ${isExpanded ? "Meno" : "Tutto"}`}
-                  </span>
+                <p className="text-text-2 text-sm font-body leading-relaxed whitespace-pre-line pl-0.5">
+                  {isExpanded
+                    ? descrizione
+                    : `${descrizione.slice(0, 250)}${descrizione.length > 250 ? "..." : ""}`}
+                  {descrizione.length > 250 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsExpanded((prev) => !prev)}
+                      className="inline-block text-primary font-bold ml-1.5 active:opacity-70 cursor-pointer text-xs"
+                    >
+                      {isExpanded ? "Leggi meno" : "Leggi tutto"}
+                    </button>
+                  )}
                 </p>
               </div>
               <button className="w-full flex items-center justify-between p-3 bg-orange-50 rounded-2xl border border-orange-100 active:scale-95 transition-transform">
@@ -368,46 +372,51 @@ const EventDetailsMobile = () => {
             </div>
           </div>
         </div>
-        {created_by !== session.user.id && (
-          <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-6 z-[110] shadow-[0_-10px_20px_-5px_rgba(0,0,0,0,0.05)]">
-            <div className="w-full flex justify-between flex-row gap-6">
+        {created_by !== session?.user?.id && (
+          <div className="fixed bottom-0 left-0 right-0 bg-bg-1/95 border-t border-bg-3/60 p-4 pb-5 z-[110] backdrop-blur-md shadow-lg">
+            <div className="w-full flex flex-row gap-3">
               <button
+                type="button"
                 disabled={scadenza < Date.now()}
-                className={`flex-1 ${status == "accepted" ? "bg-primary text-white" : "bg-gray-50 text-gray-400 border border-gray-200"} font-bold py-4 rounded-2xl  active:scale-[0.97] transition-all duration-200 flex items-center justify-center cursor-pointer`}
                 onClick={() => {
                   const newStatus =
-                    status == "accepted" ? "pending" : "accepted";
-
-                  handleEventDecision(
-                    eventId,
-                    {
-                      status: newStatus,
-                    },
-                    () => {
-                      sendSocketVoteEvent(newStatus);
-                    },
-                  );
+                    status === "accepted" ? "pending" : "accepted";
+                  handleEventDecision(eventId, { status: newStatus }, () => {
+                    sendSocketVoteEvent(newStatus);
+                  });
                 }}
+                className={`
+            flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer
+            ${
+              status === "accepted"
+                ? "bg-primary text-white shadow-md shadow-primary/20"
+                : "bg-bg-2 text-text-2 border border-bg-3/80 active:bg-bg-3/60"
+            }
+            disabled:opacity-40 disabled:cursor-not-allowed
+          `}
               >
                 Accetta
               </button>
+
               <button
+                type="button"
                 disabled={scadenza < Date.now()}
-                className={`flex-1 ${status == "rejected" ? "bg-red-500 text-white" : "bg-gray-50 text-gray-400 border border-gray-200"} font-bold py-4 rounded-2xl  active:scale-[0.97] transition-all duration-200 flex items-center justify-center cursor-pointer`}
                 onClick={() => {
                   const newStatus =
-                    status == "rejected" ? "pending" : "rejected";
-
-                  handleEventDecision(
-                    eventId,
-                    {
-                      status: newStatus,
-                    },
-                    () => {
-                      sendSocketVoteEvent(newStatus);
-                    },
-                  );
+                    status === "rejected" ? "pending" : "rejected";
+                  handleEventDecision(eventId, { status: newStatus }, () => {
+                    sendSocketVoteEvent(newStatus);
+                  });
                 }}
+                className={`
+            flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer
+            ${
+              status === "rejected"
+                ? "bg-red-500 text-white shadow-md shadow-red-500/20"
+                : "bg-bg-2 text-text-2 border border-bg-3/80 active:bg-bg-3/60"
+            }
+            disabled:opacity-40 disabled:cursor-not-allowed
+          `}
               >
                 Rifiuta
               </button>

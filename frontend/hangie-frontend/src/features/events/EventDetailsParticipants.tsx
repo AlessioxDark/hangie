@@ -54,78 +54,60 @@ const EventDetailsParticipants = () => {
   }, [currentFilter, query]);
 
   return (
-    <div className="flex flex-col gap-4 2xl:gap-12 overflow-hidden h-screen">
-      <div className="flex flex-col gap-4">
-        <div className="px-2 py-3 w-full flex flex-row items-center gap-2 border-b border-gray-200  bg-white">
-          <div className="w-8 h-8" onClick={() => navigate(-1)}>
-            <ChevronLeft color={"#2463eb"} />
-          </div>
-          <h1 className="font-body text-text-1 text-lg font-bold">
-            Dettagli Partecipanti({currentRisposte.length})
-          </h1>
-        </div>
-        <div className="flex flex-col 2xl:mt-6 mt-2 gap-3 2xl:gap-4 px-3">
-          {currentScreen !== "xs" && (
-            <h1 className="text-text-1 font-body font-semibold 2xl:text-3xl ">
-              Partecipanti({currentRisposte.length})
-            </h1>
-          )}
-          <div className="space-y-4">
-            <div className="w-full h-12">
-              <SearchBar query={query} setQuery={setQuery} />
-            </div>
-            <div className="flex flex-row gap-4 items-center">
-              {currentScreen !== "xs" && (
-                <span className="font-bold font-body text-text-2 text-sm 2xl:text-xl">
-                  Filtra:{" "}
-                </span>
-              )}
-              <div className="flex w-full flex-row gap-2 2xl:gap-4 items-center">
-                {FILTER_TYPES.map((filter) => {
-                  return (
-                    <div
-                      onClick={() => {
-                        if (currentFilter === filter) {
-                          setCurrentFilter("");
-                        } else {
-                          setCurrentFilter(filter);
-                        }
-                      }}
-                      className={`px-3 2xl:px-5 py-2 ${
-                        currentFilter == filter
-                          ? "bg-primary text-bg-1 shadow-md "
-                          : "bg-bg-2 text-text-2 border border-gray-200  hover:bg-bg-3 hover:shadow-md"
-                      } font-body  text-xs 2xl:text-xl cursor-pointer
-                
-                
-             
-              font-semibold 
-              rounded-full 
-          
-              transition-all duration-200 
-              shadow-sm
+    <div className="flex flex-col h-screen bg-bg-1 overflow-hidden">
+      {/* Header della schermata */}
+      <div className="px-4 py-3 w-full flex flex-row items-center gap-3 border-b border-bg-3/60 bg-bg-1">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 flex items-center justify-center rounded-full text-primary active:bg-bg-2/70 transition-colors cursor-pointer"
+          aria-label="Torna indietro"
+        >
+          <ChevronLeft color="currentColor" />
+        </button>
+        <h1 className="font-title text-text-1 text-lg font-bold">
+          Partecipanti ({currentRisposte.length})
+        </h1>
+      </div>
 
-             
-              `}
-                    >
-                      {filter}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+      {/* Area di Controllo: SearchBar e Filtri di stato */}
+      <div className="flex flex-col gap-4 p-4 pb-3 flex-shrink-0">
+        {/* Barra di ricerca */}
+        <div className="w-full h-11">
+          <SearchBar query={query} setQuery={setQuery} />
+        </div>
+
+        {/* Lista dei Filtri a Pillola */}
+        <div className="flex flex-row gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {FILTER_TYPES.map((filter) => {
+            const isActive = currentFilter === filter;
+            return (
+              <button
+                key={filter}
+                onClick={() => setCurrentFilter(isActive ? "" : filter)}
+                className={`
+              px-4 py-2 rounded-full font-body text-xs font-bold whitespace-nowrap
+              transition-all duration-200 cursor-pointer active:scale-[0.96]
+              ${
+                isActive
+                  ? "bg-primary text-white shadow-sm shadow-primary/20"
+                  : "bg-bg-2 text-text-2 border border-bg-3/60 active:bg-bg-3/50"
+              }
+            `}
+              >
+                {filter}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="flex flex-col overflow-y-scroll bg-bg-1  border border-bg-3 overflow-hidden shadow-sm shadow-slate-200/50">
-        {currentRisposte?.map((risposta) => {
-          return (
-            <>
-              <PartecipanteCard {...risposta} />
-            </>
-          );
-        })}
+      {/* Lista Scorrevole dei Partecipanti */}
+      <div className="flex-1 overflow-y-auto px-4 divide-bg-3/40">
+        {currentRisposte?.map((risposta) => (
+          <div key={risposta.user_id || risposta.id}>
+            <PartecipanteCard {...risposta} />
+          </div>
+        ))}
       </div>
     </div>
   );

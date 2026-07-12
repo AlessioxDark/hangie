@@ -156,21 +156,23 @@ const EditableImg = ({
             )}
 
             {currentEditingField == "nome" ? (
-              <div className="flex flex-col gap-2 ">
+              <div className="flex flex-col gap-1.5 items-center w-full">
                 <input
-                  className="text-2xl font-bold text-text-1 leading-tight p-1 focus:outline-none text-center"
+                  type="text"
                   autoFocus
                   value={localGroupData.nome}
-                  onChange={(e) => {
-                    setLocalGroupData((prevData) => {
-                      return { ...prevData, nome: e.target.value };
-                    });
-                  }}
+                  onChange={(e) =>
+                    setLocalGroupData((prev) => ({
+                      ...prev,
+                      nome: e.target.value,
+                    }))
+                  }
+                  className="text-xl font-title font-bold text-text-1 bg-bg-2 border-b-2 border-primary px-2 py-0.5 outline-none text-center rounded-t-md max-w-xs"
                 />
-                {formError && formError.type == "nome" && (
-                  <span className="text-sm font-body  text-red-500 ">
+                {formError?.type === "nome" && (
+                  <p className="text-[11px] font-body font-bold text-red-500">
                     {formError.message}
-                  </span>
+                  </p>
                 )}
               </div>
             ) : (

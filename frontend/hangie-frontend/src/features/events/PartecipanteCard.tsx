@@ -39,39 +39,44 @@ const GetStatusColor = (statusValue) => {
 const PartecipanteCard = ({ utenti, created_at, status, is_creator }) => {
   return (
     <div
-      className="w-full flex flex-row justify-between items-center px-2 2xl:px-0  gap-2 p-1.5
-         cursor-pointer group
-		    
-		   py-3
-		     transition-all duration-200 border  bg-white hover:border-gray-300 border-bg-3"
+      className="
+      w-full flex flex-row justify-between items-center px-1 py-3 gap-3
+      bg-bg-1 transition-all duration-150 active:bg-bg-2/50 cursor-pointer
+    "
     >
-      <div className="flex flex-row gap-2 2xl:gap-4 items-center">
-        <div className="w-12 h-12 2xl:w-16 2xl:h-16">
+      {/* Info Utente: Avatar, Nome e Data Risposta */}
+      <div className="flex flex-row gap-3 items-center min-w-0">
+        <div className="w-11 h-11 flex-shrink-0">
           <ProfileIcon profile_pic={utenti.profile_pic} />
         </div>
-        <div className="flex flex-col ">
-          <div className="flex flex-row gap-3 items-center">
-            <span className="text-text-1 2xl:text-xl font-body font-medium text-sm">
+
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-text-1 font-body font-semibold text-sm truncate">
               {utenti.nome}
             </span>
             {is_creator && (
-              <span className="text-[9px] font-bold uppercase tracking-tight bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+              <span className="text-[9px] font-bold uppercase tracking-wider bg-text-1/10 text-text-1 px-1.5 py-0.5 rounded-md flex-shrink-0">
                 Creatore
               </span>
             )}
           </div>
-          <span className="text-text-3 text-[12px] font-body font-medium italic">
-            Risposto {formatDate(created_at)}
+          <span className="text-text-3 text-[11px] font-body font-medium mt-0.5">
+            Risposto il {formatDate(created_at)}
           </span>
         </div>
       </div>
+
+      {/* Badge di Stato (Accettato, In Attesa, Rifiutato) */}
       <div
-        className={`${GetStatusColor(status)} px-2.5 2xl:px-5 py-1.5 2xl:py-2.5 rounded-full flex items-center animate-pulse-slow`}
+        className={`
+        ${GetStatusColor(status)} px-3 py-1.5 rounded-full flex items-center flex-shrink-0
+      `}
       >
-        <span className="text-sm 2xl:text-xl font-body font-medium capitalize">
+        <span className="text-xs font-body font-bold tracking-wide">
           {status === "accepted"
             ? "Confermato"
-            : status == "pending"
+            : status === "pending"
               ? "In attesa"
               : "Rifiutato"}
         </span>

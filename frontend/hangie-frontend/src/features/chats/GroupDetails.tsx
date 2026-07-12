@@ -228,7 +228,7 @@ const GroupDetails = () => {
   };
 
   return (
-    <div>
+    <div className="w-full h-screen bg-bg-1 flex flex-col overflow-hidden">
       {isParticipantsAdd ? (
         <AddParticipantsGroup
           setIsParticipantsAdd={setIsParticipantsAdd}
@@ -240,25 +240,30 @@ const GroupDetails = () => {
           }
         />
       ) : (
-        <div className="pb-6">
-          <div className="sticky top-0 z-10 flex items-center justify-between bg-bg-1 px-4 py-3 backdrop-blur-md border-b border-gray-200  mb-4">
-            <div className="flex items-center gap-2">
-              {currentScreen === "xs" && (
-                <button
-                  onClick={() => {
-                    navigate(-1);
-                  }}
-                  className="w-7 h-7"
-                >
-                  <ChevronLeft color={"#007AFF"} />
-                </button>
-              )}
-              <h2 className="text-lg font-semibold text-text-1">Info Gruppo</h2>
+        <>
+          {/* Header Fisso Mobile Nativo */}
+          <div className="px-4 py-3 border-b border-neutral-300/60 bg-bg-1 flex-shrink-0 flex justify-between items-center">
+            <div className="flex flex-row gap-2 items-center min-w-0">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="w-9 h-9 flex items-center justify-center rounded-full text-[#007AFF] active:bg-bg-2 transition-colors cursor-pointer"
+                aria-label="Torna indietro"
+              >
+                <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
+              </button>
+              <h1 className="text-text-1 font-title font-bold text-lg truncate">
+                Info Gruppo
+              </h1>
             </div>
           </div>
-          <div className="flex flex-col gap-5">
-            <div className="w-full flex flex-col gap-8">
-              <div className="flex flex-col gap-5">
+
+          {/* Corpo della Schermata (Area Scorrevole) */}
+          <div className="flex-1 overflow-y-auto px-2 py-5 flex flex-col justify-between">
+            {/* Contenitore Principale delle Informazioni ed Editabili */}
+            <div className="flex flex-col gap-6 w-full">
+              {/* Box Immagine e Nome Gruppo */}
+              <div className="flex flex-col gap-5  p-1 rounded-2xl ">
                 <EditableImg
                   currentEditingField={currentEditingField}
                   formError={formError}
@@ -282,17 +287,23 @@ const GroupDetails = () => {
                 />
               </div>
 
-              <ParticipantsSection
-                isAdmin={isAdmin}
-                currentParticipants={currentParticipants}
-                handleParticipantsAdd={handleParticipantsAdd}
-              />
+              {/* Lista Componente Partecipanti */}
+              <div className="w-full">
+                <ParticipantsSection
+                  isAdmin={isAdmin}
+                  currentParticipants={currentParticipants}
+                  handleParticipantsAdd={handleParticipantsAdd}
+                />
+              </div>
             </div>
-            <LeaveButton />
+
+            {/* Pulsante Abbandona (Spinto sempre in fondo alla vista) */}
+            <div className="w-full pt-8 pb-4 flex justify-center ">
+              <LeaveButton />
+            </div>
           </div>
-        </div>
+        </>
       )}
-      ;
     </div>
   );
 };

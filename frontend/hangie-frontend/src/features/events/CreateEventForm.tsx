@@ -236,44 +236,38 @@ const CreateEventForm = () => {
     return <RenderLoadingState type={"add_event"} />;
   }
   return (
-    <div
-      className={`w-full max-w-4xl mx-auto rounded-2xl shadow-2xl overflow-hidden bg-bg-1 relative`}
-    >
+    <div className="w-full h-screen bg-bg-1 flex flex-col overflow-hidden relative">
       <form
-        className="flex flex-col h-screen"
+        className="flex flex-col h-full"
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit(onSubmit)();
         }}
       >
-        <div className={`2xl:px-8 2xl:pt-8 p-2 2xl:pb-4 border-b border-bg-3`}>
-          <div className="flex justify-between items-center">
-            <div className="flex flex-row gap-1 items-center">
-              {currentScreen == "xs" && (
-                <div className="w-6 h-6" onClick={handleLastStepMobile}>
-                  <ChevronLeft color="#64748b" />
-                </div>
-              )}
-              <h1
-                className={`text-text-1 font-body font-bold text-lg 2xl:text-4xl`}
-              >
-                Crea Evento
-              </h1>
-            </div>
-            {currentScreen !== "xs" && (
-              <button
-                type="button"
-                className={`text-text-2 cursor-pointer transition-colors 2xl:p-1 rounded-full hover:bg-bg-3`}
-                onClick={closeModal}
-                aria-label="Chiudi Modale"
-              >
-                <X width={25} height={25} />
-              </button>
-            )}
+        {/* Header della Schermata */}
+        <div className="px-4 py-3 border-b border-bg-3/60 bg-bg-1 flex-shrink-0 flex justify-between items-center">
+          <div className="flex flex-row gap-2 items-center min-w-0">
+            <button
+              type="button"
+              onClick={handleLastStepMobile}
+              className="w-9 h-9 flex items-center justify-center rounded-full text-text-2 active:bg-bg-2 transition-colors cursor-pointer"
+              aria-label="Torna al passaggio precedente"
+            >
+              <ChevronLeft color="currentColor" />
+            </button>
+            <h1 className="text-text-1 font-title font-bold text-lg truncate">
+              Crea Evento
+            </h1>
           </div>
+
+          {/* Indicatore del Passaggio Corrente (Stile Mobile Nativo) */}
+          <span className="text-xs font-body font-bold text-text-3 bg-bg-2 px-2.5 py-1 rounded-md">
+            Step {currentStep} di 3
+          </span>
         </div>
 
-        <div className={`${currentScreen == "xs" && "pb-32 overflow-y-auto"}`}>
+        {/* Area Contenuto del Form (Scorrevole) */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
           <FormInputCollection
             register={register}
             errors={errors}
@@ -284,7 +278,8 @@ const CreateEventForm = () => {
             currentStep={currentStep}
           />
         </div>
-        {currentScreen == "xs" && (
+
+        <div className="absolute bottom-0 left-0 right-0 h-20 px-4 bg-bg-1/95 backdrop-blur-md border-t border-bg-3/40 flex items-center justify-center z-50">
           <div
             className="fixed bottom-5 right-5 flex items-center justify-center  font-body text-xs text-primary bg-primary p-3 rounded-full"
             onClick={handleNextStepMobile}
@@ -299,20 +294,8 @@ const CreateEventForm = () => {
               </button>
             )}
           </div>
-        )}
-      </form>
-      {currentScreen !== "xs" && (
-        <div className={`flex justify-center p-4 bg-bg-2 border-t border-bg-3`}>
-          <button
-            type="submit"
-            className={`px-9 py-4 bg-primary text-white font-bold rounded-xl 
-                hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl text-lg cursor-pointer`}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creazione..." : "Crea e Pubblica Evento"}
-          </button>
         </div>
-      )}
+      </form>
     </div>
   );
 };

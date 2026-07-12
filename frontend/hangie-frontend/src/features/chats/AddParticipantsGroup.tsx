@@ -79,59 +79,72 @@ const AddParticipantsGroup = ({
     return <RenderLoadingState type={"add_participants"} />;
   }
   return (
-    <div className="flex flex-col gap-3">
-      <div className="w-full  p-2 border-b border-bg-3 items-center flex flex-row justify-between">
-        <div className="flex flex-row gap-1 items-center">
-          <div
-            className="w-6 h-6"
-            onClick={() => {
-              setIsParticipantsAdd(false);
-            }}
+    <div className="w-full h-screen bg-bg-1 flex flex-col overflow-hidden">
+      {/* Header della Schermata Selettore */}
+      <div className="px-4 py-3 border-b border-bg-3/60 bg-bg-1 flex-shrink-0 flex justify-between items-center">
+        <div className="flex flex-row gap-2 items-center min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsParticipantsAdd(false)}
+            className="w-9 h-9 flex items-center justify-center rounded-full text-primary active:bg-bg-2 transition-colors cursor-pointer"
+            aria-label="Annulla e torna indietro"
           >
-            <ChevronLeft color={"#2463eb"} />
-          </div>
-          <h1 className="text-lg text-text-1 font-body font-bold">
+            <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
+          </button>
+          <h1 className="text-text-1 font-title font-bold text-lg truncate">
             Aggiungi partecipanti
           </h1>
         </div>
 
+        {/* Tasto Invia / Salva nell'Header */}
         <button
-          className="px-2 py-1 rounded-md font-body text-bg-1 text-sm bg-primary disabled:bg-primary/75"
-          disabled={localParticipants.length == 0}
+          disabled={localParticipants.length === 0}
           onClick={() => {
-            setCurrentParticipants((prevParticipants) => {
-              return [...localParticipants];
-            });
+            setCurrentParticipants([...localParticipants]);
             if (isGroup) {
               onConfirm(localParticipants);
             }
             setIsParticipantsAdd(false);
           }}
+          className={`
+        px-4 h-8 rounded-full font-body text-xs font-bold transition-all active:scale-95 cursor-pointer
+        ${
+          localParticipants.length === 0
+            ? "bg-bg-3 text-text-3 opacity-50 cursor-not-allowed"
+            : "bg-primary text-white shadow-sm shadow-primary/10"
+        }
+      `}
         >
-          Invia
+          Fatto
         </button>
       </div>
-      <div className="w-full flex flex-col gap-3 2xl:gap-4 px-3">
-        <SearchBar query={query} setQuery={setQuery} />
-        <div>
+
+      {/* Area di Ricerca e Lista Amici (Scorrevole) */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+        {/* Barra di Ricerca Integrata */}
+        <div className="flex-shrink-0">
+          <SearchBar query={query} setQuery={setQuery} />
+        </div>
+
+        {/* Switch degli Stati di Caricamento / Errore / Lista */}
+        <div className="flex-1">
           {isLoading ? (
-            <RenderLoadingState type={"participant"} />
+            <RenderLoadingState type="participant" />
           ) : error ? (
             <RenderErrorState
               errorMessage={error.message}
               reloadFunction={fetchFriends}
             />
           ) : (
-            <div className="flex flex-col gap-2">
-              {currentFriendsData?.map((friend) => {
-                return (
-                  <FriendCard
-                    friend={friend}
-                    localParticipants={localParticipants}
-                    setLocalParticipants={setLocalParticipants}
-                  />
-                );
-              })}
+            <div className="flex flex-col gap-1">
+              {currentFriendsData?.map((friend) => (
+                <FriendCard
+                  key={friend.id || friend.uid}
+                  friend={friend}
+                  localParticipants={localParticipants}
+                  setLocalParticipants={setLocalParticipants}
+                />
+              ))}
             </div>
           )}
         </div>

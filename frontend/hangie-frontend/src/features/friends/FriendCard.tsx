@@ -16,26 +16,11 @@ const FriendCard = ({
   );
   return (
     <div
-      className={`flex flex-row items-center gap-2 px-2 p-1.5
-       border-[#E2E8F0] rounded-xl cursor-pointer group
-		     hover:-translate-y-2 relative
-		  shadow-sm hover:shadow-2xl
-		     transition-all duration-200 border-2 
-         ${
-           isSelected
-             ? "border-primary bg-primary/5 shadow-md"
-             : "border-[#E2E8F0] bg-white hover:border-gray-300 shadow-sm"
-         }
-         
-          
-        `}
       onClick={() => {
         if (isSelected) {
-          setLocalParticipants((prevParticipants) => {
-            return prevParticipants.filter(
-              (participant) => participant.user_id !== friend.user_id,
-            );
-          });
+          setLocalParticipants((prevParticipants) =>
+            prevParticipants.filter((p) => p.user_id !== friend.user_id),
+          );
         } else {
           setLocalParticipants((prevParticipants) => [
             friend,
@@ -43,28 +28,44 @@ const FriendCard = ({
           ]);
         }
       }}
+      className={`
+    flex flex-row items-center gap-3 p-3 rounded-xl cursor-pointer select-none
+    border transition-all duration-150
+    ${
+      isSelected
+        ? "border-primary bg-primary/5 shadow-md ring ring-primary"
+        : "border-[#E2E8F0] bg-white hover:border-gray-300 shadow-sm"
+    }
+  `}
     >
-      <div className="w-14 h-14 flex items-center justify-center">
+      {/* Avatar dell'Amico */}
+      <div className="w-11 h-11 flex-shrink-0 flex items-center justify-center">
         <ProfileIcon profile_pic={friend.profile_pic} />
       </div>
-      <div className="flex flex-row justify-between w-full items-center">
-        <div className="flex flex-col justify-center min-w-0 gap-1">
-          <h1 className="text-text-1 font-body font-bold truncate leading-4">
+
+      {/* Dati dell'Utente e Checkbox Nativo */}
+      <div className="flex flex-row justify-between w-full items-center min-w-0">
+        <div className="flex flex-col min-w-0 gap-0.5">
+          <h2 className="text-text-1 font-body font-bold text-sm truncate">
             {friend.nome}
-          </h1>
-          <span className="font-body text-xs text-text-2 truncate">
+          </h2>
+          <span className="font-body text-xs text-text-3 truncate">
             @{friend.handle}
           </span>
         </div>
 
+        {/* Checkbox Circolare Mobile Style */}
         <div
-          className={` rounded-full mr-2 transition-colors duration-300 border-2 flex items-center justify-center p-0.5  ${
-            isSelected
-              ? "bg-primary border-primary"
-              : "bg-white border-gray-400 "
-          }`}
+          className={`
+        w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0
+        ${
+          isSelected
+            ? "bg-primary border-primary scale-100"
+            : "bg-transparent border-bg-3 scale-95"
+        }
+      `}
         >
-          <Check color={"#ffffff"} size={18} />
+          {isSelected && <Check color="#ffffff" size={14} strokeWidth={3} />}
         </div>
       </div>
     </div>

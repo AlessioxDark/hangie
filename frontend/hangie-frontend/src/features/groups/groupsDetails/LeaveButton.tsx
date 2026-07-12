@@ -29,7 +29,7 @@ const LeaveButton = () => {
     );
   };
   return (
-    <section className="px-4 mt-4">
+    <section className="w-full px-4 mt-4">
       <button
         className="w-full py-4 text-white  bg-red-500 font-semibold rounded-2xl active:bg-red-400 transition-all shadow-sm"
         onClick={() => {

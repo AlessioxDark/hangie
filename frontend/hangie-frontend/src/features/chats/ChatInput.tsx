@@ -16,7 +16,6 @@ const ChatInput = ({
   const dropdownRef = useRef(null);
   const debounceTimerRef = useRef(null);
   const { openModal } = useModal();
-  const { currentScreen } = useScreen();
   const { setMobileView } = useMobileLayout();
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
@@ -57,98 +56,52 @@ const ChatInput = ({
   const isSendActive =
     inputValue && inputValue.trim().length > 0 && !isDropdownOpen;
 
-  const handleDropdownChoice = (type) => {
-    openModal({ type: type, data: null });
-  };
   return (
-    <div
-      className="
-            bg-white border-t border-gray-200
-                    flex items-center justify-center 
-                    p-2 2xl:p-4 shadow-2xl 
-					w-full sticky bottom-0
-        "
-      style={{ borderWidth: "0.1px", borderLeft: "0px" }}
-    >
+    <div className="w-full bg-bg-1 border-t border-neutral-300/60 p-2 flex flex-col items-center sticky bottom-0 z-50 shadow-lg">
       {/* Contenitore Input Interno */}
-      <div className="flex flex-row w-full  gap-1.5 2xl:gap-4 items-center">
-        <div
-          className="
-          bg-gray-100 flex-1 
-                            rounded-4xl 
-                            focus-within:ring-2 
-                            focus-within:ring-blue-500
-                            p-1 shadow-inner transition-shadow
-                            flex items-center
-                             gap-0.5
-                             min-h-11
-                             
-                           
-                            
-          "
-        >
-          <div
-            className=" relative transition-all ml-2 hover:bg-bg-3 rounded-full w-6 h-full 2xl:h-12 2xl:w-12 flex items-center justify-center"
-            ref={dropdownRef}
-          >
-            <div className="w-5 h-5 2xl:w-6 2xl:h-6" onClick={toggleDropdown}>
-              <ClipIcon />
-            </div>
-            {isDropdownOpen &&
-              (currentScreen !== "xs" ? (
-                <div
-                  className={`absolute bottom-12 w-32 min-h-12 bg-bg-1 transition-all rounded-xl `}
+      <div className="flex flex-row w-full gap-2 items-end">
+        {/* Campo di testo e Graffetta Allegati */}
+        <div className="flex-1 bg-bg-2 rounded-2xl border border-neutral-300/40 p-1 flex items-end gap-1 min-h-[44px] relative focus-within:ring-2 focus-within:ring-primary">
+          {/* Menu/Bottone Graffetta */}
+          <div className="relative mb-0.5" ref={dropdownRef}>
+            <button
+              onClick={toggleDropdown}
+              className="w-9 h-9 flex items-center justify-center rounded-full text-text-2 active:bg-bg-3/50 active:text-text-1 transition-all cursor-pointer"
+              aria-label="Apri opzioni allegati"
+            >
+              <div className="w-5 h-5">
+                <ClipIcon color="currentColor" />
+              </div>
+            </button>
+
+            {/* Dropdown Mobile: Menu ad Azione Nativo (Action Sheet) */}
+            {isDropdownOpen && (
+              <div className="absolute left-0 bottom-12 w-44 bg-bg-1 border border-bg-3/60 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                <button
+                  onClick={() => {
+                    setMobileView("CREATE_EVENT");
+                    toggleDropdown();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-3 font-body font-bold text-xs text-text-1 active:bg-bg-2 text-left cursor-pointer"
                 >
-                  <div className="w-full text-center hover:bg-bg-3/60 py-2 cursor-pointer transition-all rounded-t-xl">
-                    <span
-                      className="text-text-1 font-body font-medium  w-full"
-                      onClick={() => {
-                        handleDropdownChoice("CREATE_EVENT_MODAL");
-                      }}
-                    >
-                      Crea Evento
-                    </span>
+                  <div className="p-1.5 rounded-full bg-primary text-white flex items-center justify-center">
+                    <Plus className="w-4 h-4" strokeWidth={3} />
                   </div>
-                </div>
-              ) : (
-                <div
-                  className={`absolute -left-5 bottom-10 w-screen  min-h-12 transition-all bg-bg-3 duration-500 rounded-t-xl flex flex-row gap-2 py-2 px-2 `}
-                >
-                  <div
-                    onClick={() => {
-                      setMobileView("CREATE_EVENT");
-                    }}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <div className="p-2 rounded-full bg-primary">
-                      <Plus className="text-bg-1" />
-                    </div>
-                    <span className="text-xs font-body text-text-1">
-                      Crea Evento
-                    </span>
-                  </div>
-                </div>
-              ))}
+                  Crea Evento
+                </button>
+              </div>
+            )}
           </div>
 
+          {/* Input di testo editabile */}
           <div
             contentEditable={!isDropdownOpen}
             ref={chatInputRef}
             className={`
-                            min-h-8
-                            max-h-32
-                           
-                            w-full py-2 px-1 pr-3 outline-none 
-                            text-sm 2xl:text-lg text-text-1 font-body
-                            overflow-y-auto 
-                            transition-opacity duration-200
-                           
-                            ${
-                              isDropdownOpen
-                                ? "opacity-50 cursor-not-allowed"
-                                : "opacity-100"
-                            }
-                        `}
+          flex-1 min-h-[24px] max-h-24 w-full py-2 px-1 pr-3 outline-none 
+          text-sm text-text-1 font-body overflow-y-auto transition-opacity duration-200
+          ${isDropdownOpen ? "opacity-40 cursor-not-allowed" : "opacity-100"}
+        `}
             onInput={handleInput}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -157,27 +110,27 @@ const ChatInput = ({
               }
             }}
             data-placeholder="Scrivi un messaggio..."
-          ></div>
+          />
         </div>
+
+        {/* Pulsante Invia Messaggio */}
         <button
           onClick={isSendActive ? sendMessage : undefined}
           disabled={!isSendActive}
           className={`
-                        w-10 h-10 2xl:w-11 2xl:h-11 
-                        flex items-center justify-center 
-                        rounded-full 
-                        transition-all duration-150
-                        shadow-md 
-                        flex-shrink-0
-                        ${
-                          isSendActive
-                            ? "bg-indigo-600 hover:bg-indigo-700 active:scale-95"
-                            : "bg-gray-300 cursor-not-allowed shadow-none"
-                        }
-                    `}
+        w-10 h-10 flex items-center justify-center rounded-full 
+        transition-all duration-150 flex-shrink-0 mb-0.5 cursor-pointer
+        ${
+          isSendActive
+            ? "bg-primary text-white active:scale-90 shadow-md shadow-primary/10"
+            : "bg-primary text-text-3 opacity-60 cursor-not-allowed"
+        }
+      `}
           aria-label="Invia messaggio"
         >
-          <SendIcon />
+          <div className="w-8 h-8">
+            <SendIcon color="currentColor" />
+          </div>
         </button>
       </div>
     </div>

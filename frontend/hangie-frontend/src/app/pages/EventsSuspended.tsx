@@ -103,31 +103,28 @@ const EventsSuspended = () => {
     );
   }, [eventsData, error.home_events, loading.home_events]);
   return (
-    <div ref={sliderRef} className="">
-      <div className="flex flex-row 2xl:flex-col ">
-        <div className="flex items-center gap-2">
-          <Link
-            to={"/"}
-            className="flex flex-row gap-1 items-center cursor-pointer"
-          >
-            <div className="w-6 h-6">
-              <ChevronLeft />
-            </div>
+    <div ref={sliderRef} className="w-full bg-bg-1">
+      {/* Header di navigazione della pagina */}
+      <div className="flex flex-row items-center gap-3  pb-2.5 border-b border-neutral-300/60">
+        {/* Pulsante Indietro (Area touch espansa a h-9 per facilitare il tap) */}
+        <Link
+          to="/"
+          className="flex items-center justify-center w-9 h-9 rounded-full text-primary active:bg-bg-2/70 transition-colors duration-150"
+          aria-label="Torna indietro"
+        >
+          <div className="w-6 h-6">
+            <ChevronLeft />
+          </div>
+        </Link>
 
-            {currentScreen !== "xs" && (
-              <span className="text-primary font-semibold text-base 2xl:text-2xl font-body ">
-                Indietro
-              </span>
-            )}
-          </Link>
-        </div>
-
-        <h1 className="font-body text-text-1 text-xl 2xl:text-4xl font-bold 2xl:my-6">
+        {/* Titolo della schermata */}
+        <h1 className="font-title text-text-1 text-lg font-bold tracking-tight">
           Eventi in sospeso
         </h1>
       </div>
 
-      {renderContent()}
+      {/* Contenuto della pagina (le card degli eventi sospesi) */}
+      <div className="p-4">{renderContent()}</div>
     </div>
   );
 };

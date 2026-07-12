@@ -49,29 +49,29 @@ const ParticipantsSection = ({
       saveData,
     );
   };
-  console.log(currentParticipants);
   return (
-    <section className="flex flex-col gap-2.5">
-      <div className="w-full flex flex-row justify-between">
-        <h3 className="px-8 text-xs font-bold font-body text-text-2 uppercase tracking-wide">
+    <section className="flex flex-col gap-2">
+      {/* Conteggio dei Partecipanti */}
+      <div className="w-full flex flex-row justify-between items-center px-4 mb-1">
+        <h3 className="text-xs font-body font-bold text-text-3 uppercase tracking-wider pl-0.5">
           {currentParticipants.length} Partecipanti
         </h3>
       </div>
-      <div className="mx-4 bg-bg-1 rounded-2xl border border-bg-3 overflow-hidden shadow-sm shadow-slate-200/50">
-        {currentParticipants.map((partecipante, idx) => (
-          <div
-            key={partecipante.partecipante_id}
-            className={`flex items-center gap-2.5 px-2.5 py-3 hover:bg-bg-2 active:bg-bg-3/50 transition-all cursor-pointer group relative ${
-              idx !== currentParticipants.length - 1 && "border-b border-bg-3"
-            } `}
-          >
-            <div className="w-13 h-13 shrink-0 " onClick={() => {}}>
-              <ProfileIcon profile_pic={partecipante.profile_pic} />
-            </div>
+
+      {/* Contenitore Lista in Stile iOS/Android Card Grouped */}
+      <div className="mx-4 bg-bg-1 rounded-2xl border border-bg-3/80 overflow-hidden shadow-sm">
+        {currentParticipants.map((partecipante, idx) => {
+          const isMe = partecipante.user_id === session?.user?.id;
+          const isCreator =
+            currentGroupData.createdBy === partecipante.partecipante_id ||
+            currentGroupData.createdBy === partecipante.user_id;
+          const isAdminRole = partecipante.role === "admin";
+
+          return (
             <div
-              className="flex flex-col min-w-0 flex-1"
+              key={partecipante.partecipante_id || partecipante.user_id}
               onClick={() => {
-                if (partecipante.user_id !== session.user.id) {
+                if (!isMe) {
                   openModal({
                     type: "PARTICIPANT_ACTIONS",
                     data: {
@@ -83,44 +83,60 @@ const ParticipantsSection = ({
                   });
                 }
               }}
+              className={`
+            flex items-center gap-3 px-3.5 py-3 transition-colors select-none relative
+            ${isMe ? "cursor-default" : "cursor-pointer active:bg-bg-2"}
+            ${idx !== currentParticipants.length - 1 || isAdmin ? "border-b border-bg-3/60" : ""}
+          `}
             >
-              <div className="flex flex-row gap-1 items-end">
-                <span className="text-text-1 font-semibold truncate leading-tight">
-                  {partecipante.nome}
-                </span>
-
-                {(currentGroupData.createdBy == partecipante.partecipante_id ||
-                  currentGroupData.createdBy == partecipante.user_id) && (
-                  <span className="text-primary text-[10px] py-0.5 px-1 rounded-xl font-medium">
-                    CREATORE
-                  </span>
-                )}
-                {partecipante.role == "admin" &&
-                  !(
-                    currentGroupData.createdBy ==
-                      partecipante.partecipante_id ||
-                    currentGroupData.createdBy == partecipante.user_id
-                  ) && (
-                    <span className="text-primary text-[10px] py-0.5 px-1 rounded-xl font-medium">
-                      ADMIN
-                    </span>
-                  )}
+              {/* Avatar del Partecipante */}
+              <div className="w-11 h-11 shrink-0">
+                <ProfileIcon profile_pic={partecipante.profile_pic} />
               </div>
-              <span className="text-text-2 text-sm truncate">
-                @{partecipante.handle}
-              </span>
+
+              {/* Informazioni Utente (Dati & Badge) */}
+              <div className="flex flex-col min-w-0 flex-1 justify-center">
+                <div className="flex flex-row items-center gap-1.5 w-full">
+                  <span className="text-text-1 font-body font-bold text-sm truncate max-w-[160px] leading-tight">
+                    {partecipante.nome}
+                  </span>
+
+                  {/* Badge di Ruolo Semantici */}
+                  {isCreator ? (
+                    <span className="text-[9px] font-body font-extrabold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0">
+                      Creatore
+                    </span>
+                  ) : isAdminRole ? (
+                    <span className="text-[9px] font-body font-extrabold bg-text-3/10 text-text-2 px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0">
+                      Admin
+                    </span>
+                  ) : null}
+                </div>
+
+                <span className="text-text-3 font-body text-xs truncate mt-0.5">
+                  @{partecipante.handle}
+                </span>
+              </div>
+
+              {/* Indicatore Chevron Laterale (Nascosto se sono io) */}
+              {!isMe && (
+                <div className="w-5 h-5 flex items-center justify-center text-text-3/60 shrink-0">
+                  <ChevronRight size={16} strokeWidth={2.5} />
+                </div>
+              )}
             </div>
-            <div className="w-5 h-5" onClick={() => {}}>
-              <ChevronRight color={"#64748b"} />
-            </div>
-          </div>
-        ))}
+          );
+        })}
+
+        {/* Pulsante Aggiungi Partecipante (Integrato come riga interna per gli Admin) */}
         {isAdmin && (
           <button
-            className="w-full bg-primary text-white font-body px-2.5 py-3 flex justify-center"
+            type="button"
             onClick={handleParticipantsAdd}
+            className="w-full h-13 px-4 bg-bg-2/40 text-primary font-body font-semibold text-sm flex items-center justify-center gap-2 active:bg-bg-3/40 transition-colors cursor-pointer"
           >
-            <Plus className="text-white font-bold " size={30} />
+            <Plus size={16} strokeWidth={3} />
+            Aggiungi partecipanti
           </button>
         )}
       </div>

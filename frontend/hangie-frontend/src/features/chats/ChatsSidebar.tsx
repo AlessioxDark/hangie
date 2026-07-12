@@ -1,5 +1,4 @@
 import GroupCard from "@/features/groups/GroupCard.js";
-
 import { Plus } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext.js";
 import RenderLoadingState from "../utils/RenderLoadingState";
@@ -7,6 +6,7 @@ import RenderErrorState from "../utils/RenderErrorState";
 import RenderEmptyState from "../utils/RenderEmptyState";
 import { useApi } from "@/contexts/ApiContext";
 import { useMobileLayout } from "@/contexts/MobileLayoutChatContext";
+
 const ChatsSidebar = () => {
   const { groupsData, fetchGroups } = useChat();
   const { setMobileView } = useMobileLayout();
@@ -19,7 +19,7 @@ const ChatsSidebar = () => {
     if (error && error.groups) {
       return <RenderErrorState type="groups" reloadFunction={fetchGroups} />;
     }
-    if (groupsData?.length == 0) {
+    if (groupsData?.length === 0) {
       return <RenderEmptyState type="groups" />;
     }
     if (groupsData) {
@@ -28,22 +28,29 @@ const ChatsSidebar = () => {
       });
     }
   };
+
   return (
-    <div className="xl:gap-0 2xl:gap-12 xl:w-5/12 2xl:w-1/4  h-screen bg-bg-1  flex flex-col overflow-hidden pb-16">
-      <div className="p-4 flex flex-row justify-between items-center xl:p-6 2xl:p-14">
-        <h1 className="font-body font-bold text-text-1 text-2xl xl:text-3xl 2xl:text-5xl">
+    <div className="w-full h-screen bg-bg-1 flex flex-col overflow-hidden pb-6">
+      {/* Header: Titolo della sezione e Bottone Nuova Chat */}
+      <div className="p-4 flex flex-row justify-between items-center border-b border-bg-3/60">
+        <h1 className="font-title font-bold text-text-1 text-xl tracking-tight">
           Messaggi
         </h1>
-        <div
-          className="bg-primary rounded-full p-2 flex items-center justify-center "
+
+        {/* Pulsante Crea Gruppo (Area touch ottimizzata con active) */}
+        <button
+          className="bg-primary rounded-full p-2.5 flex items-center justify-center transition-all active:scale-[0.93] cursor-pointer shadow-sm shadow-primary/10"
           onClick={() => {
             setMobileView("CREATE_GROUP");
           }}
+          aria-label="Crea nuovo gruppo"
         >
-          <Plus className="text-bg-1" />
-        </div>
+          <Plus className="text-bg-1 w-5 h-5" strokeWidth={2.5} />
+        </button>
       </div>
-      <div className="flex-1 overflow-y-auto min-h-0"> {renderContent()}</div>
+
+      {/* Lista Scorrevole dei Gruppi/Chat */}
+      <div className="flex-1 overflow-y-auto min-h-0 ">{renderContent()}</div>
     </div>
   );
 };

@@ -19,82 +19,77 @@ const MessageCard = ({
     });
   };
   const renderTick = () => {
-    if (!isUser) return;
+    if (!isUser) return null;
+
+    // Sostituite le classi h-4.5 (non valide in Tailwind standard) con h-4
     if (isRead) {
       return (
-        <div className="w-5 h-4.5">
-          <DoubleTick color="#ffffff" />
+        <div className="w-5 h-4 flex-shrink-0">
+          <DoubleTick color="currentColor" className="text-white" />
         </div>
       );
     }
     if (isSent) {
       return (
-        <div className="w-5 h-4.5">
-          <DoubleTick color="#94a3b8" />
+        <div className="w-5 h-4 flex-shrink-0">
+          <DoubleTick color="currentColor" className="text-white/60" />
         </div>
       );
     }
 
     return (
-      <div className="w-5 h-4.5">
-        <TickIcon color="#94a3b8" />
+      <div className="w-5 h-4 flex-shrink-0">
+        <TickIcon color="currentColor" className="text-white/60" />
       </div>
     );
   };
+
   return (
     <div
-      className={`flex flex-row ${
-        isUser ? "justify-end" : "items-start"
-      } gap-1 2xl:gap-2 w-full `}
+      className={`flex flex-row items-end gap-2 w-full ${
+        isUser ? "justify-end" : "justify-start"
+      }`}
     >
+      {/* Avatar dell'altro utente allineato in basso (stile WhatsApp/Telegram) */}
       {!isUser && (
-        <div className="w-10 h-10 2xl:w-14 2xl:h-14 -mt-4   ">
-          <ProfileIcon profile_pic={utenti.profile_pic} />
+        <div className="w-8 h-8 flex-shrink-0 mb-1">
+          <ProfileIcon profile_pic={utenti?.profile_pic} />
         </div>
       )}
+
+      {/* Bolla del Messaggio */}
       <div
-        className={`${
-          isUser ? "bg-[#2563eb]" : "bg-bg-3"
-        }  rounded-lg 2xl:rounded-xl
-		    max-w-[80%] 2xl:max-w-xl relative
-       min-h-8 flex flex-wrap
-		   `}
+        className={`
+        rounded-2xl max-w-[80%] relative flex flex-col p-2 min-h-[32px] justify-between
+        ${
+          isUser
+            ? "bg-primary text-white rounded-br-none" // Angolo arrotondato asimmetrico nativo
+            : "bg-bg-2 text-text-1 border border-neutral-300/40 rounded-bl-none"
+        }
+      `}
       >
-        <div
-          className="flex flex-col px-2.5 py-1 2xl:px-4 2xl:py-1.5
-		   max-w-full self-center"
-        >
+        {/* Contenuto di Testo (Nome + Messaggio) */}
+        <div className="flex flex-col px-1 flex-1 min-w-0">
           {!isUser && (
-            <span
-              className={` ${"text-text-1"} -mb-0.5 font-body font-semibold text-sm 2xl:tex-base `}
-            >
-              {utenti.nome}
+            <span className="text-text-1 font-body font-bold text-[11px] uppercase tracking-wider mb-0.5">
+              {utenti?.nome}
             </span>
           )}
-          <span
-            className={`font-body ${
-              isUser ? "text-bg-1" : "text-text-1"
-            } text-sm 2xl:text-base whitespace-pre-wrap break-words`}
-          >
+          <p className="font-body text-sm whitespace-pre-wrap break-words leading-snug">
             {content}
-          </span>
+          </p>
         </div>
-        <div
-          className={`flex flex-row items-end ml-auto ${
-            isUser ? "pr-1" : "pr-2"
-          }`}
-        >
-          <div className="ml-auto flex flex-row items-end gap-0.5 2xl:gap-1 h-auto">
-            <span
-              className={` font-body  text-[0.65rem] 2xl:text-xs shrink-0 ${
-                isUser ? "text-bg-3" : "text-text-2"
-              }`}
-            >
-              {formatDate(sent_at)}
-            </span>
 
-            {renderTick()}
-          </div>
+        {/* Info riga inferiore: Orario e Spunte di invio */}
+        <div className="flex flex-row items-center justify-end gap-1 mt-1 ml-auto pr-1">
+          <span
+            className={`font-body text-[10px] select-none tracking-tight shrink-0 ${
+              isUser ? "text-white/70" : "text-text-3"
+            }`}
+          >
+            {formatDate(sent_at)}
+          </span>
+          {renderTick()}
         </div>
       </div>
     </div>

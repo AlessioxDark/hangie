@@ -43,75 +43,96 @@ const Friends = () => {
 
     if (query === "") {
       return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5 w-full">
           {/* SEZIONE RICHIESTE PENDENTI */}
           <div className="flex flex-col gap-2">
+            {/* Header Collassabile Richieste */}
             <div
-              className="flex flex-row justify-between items-center cursor-pointer"
               onClick={() => setIsPendingCollapsed((prev) => !prev)}
+              className="flex flex-row justify-between items-center py-1 cursor-pointer select-none active:opacity-70 transition-opacity"
             >
-              <h1 className="font-body text-lg font-bold">
+              <h2 className="font-title text-base font-bold text-text-1">
                 Richieste di Amicizia ({pendingFriends.length})
-              </h1>
+              </h2>
               <ChevronDown
-                className={`transition-transform duration-300 ${isPendingCollapsed ? "-rotate-90" : ""}`}
+                size={20}
+                className={`text-text-3 transition-transform duration-250 ${
+                  isPendingCollapsed ? "-rotate-90" : ""
+                }`}
               />
             </div>
 
+            {/* Contenitore Lista Richieste */}
             <div
-              className={`border-2 border-[#E2E8F0] rounded-lg transition-all duration-500 ease-in-out overflow-hidden ${
-                isPendingCollapsed
-                  ? "max-h-0 opacity-0 border-transparent pointer-events-none"
-                  : "max-h-[1000px] opacity-100"
-              }`}
+              className={`
+        bg-bg-1 rounded-2xl border transition-all duration-300 ease-in-out overflow-hidden
+        ${
+          isPendingCollapsed
+            ? "max-h-0 opacity-0 border-transparent pointer-events-none"
+            : "max-h-[1000px] opacity-100 border-neutral-300/80 shadow-sm"
+        }
+      `}
             >
               {pendingFriends.length > 0 ? (
-                pendingFriends.map((friend) => (
-                  <FriendItem
-                    key={friend.user_id}
-                    friend={friend}
-                    setFetchData={setFriendsData}
-                    type="friend_request"
-                  />
-                ))
+                <div className="flex flex-col">
+                  {pendingFriends.map((friend) => (
+                    <FriendItem
+                      key={friend.user_id}
+                      friend={friend}
+                      setFetchData={setFriendsData}
+                      type="friend_request"
+                    />
+                  ))}
+                </div>
               ) : (
-                <p className="p-4 text-sm text-text-2 italic">
+                <p className="p-4 text-xs font-body font-medium text-text-3 italic text-center bg-bg-2/30">
                   Nessuna richiesta pendente
                 </p>
               )}
             </div>
           </div>
 
+          {/* SEZIONE AMICI ACCETTATI */}
           <div className="flex flex-col gap-2">
+            {/* Header Collassabile Lista Amici */}
             <div
-              className="flex flex-row justify-between items-center cursor-pointer"
               onClick={() => setIsAcceptedCollapsed((prev) => !prev)}
+              className="flex flex-row justify-between items-center py-1 cursor-pointer select-none active:opacity-70 transition-opacity"
             >
-              <h1 className="font-body text-lg font-bold">
+              <h2 className="font-title text-base font-bold text-text-1">
                 Amici ({acceptedFriends.length})
-              </h1>
+              </h2>
               <ChevronDown
-                className={`transition-transform duration-300 ${isAcceptedCollapsed ? "-rotate-90" : ""}`}
+                size={20}
+                className={`text-text-3 transition-transform duration-250 ${
+                  isAcceptedCollapsed ? "-rotate-90" : ""
+                }`}
               />
             </div>
 
+            {/* Contenitore Lista Amici */}
             <div
-              className={`border-2 border-[#E2E8F0] rounded-lg transition-all duration-500 ease-in-out overflow-hidden ${
-                isAcceptedCollapsed
-                  ? "max-h-0 opacity-0 border-transparent pointer-events-none"
-                  : "max-h-[2000px] opacity-100"
-              }`}
+              className={`
+        bg-bg-1 rounded-2xl border transition-all duration-300 ease-in-out overflow-hidden
+        ${
+          isAcceptedCollapsed
+            ? "max-h-0 opacity-0 border-transparent pointer-events-none"
+            : "max-h-[2000px] opacity-100 border-neutral-300/80 shadow-sm"
+        }
+      `}
             >
               {acceptedFriends.length > 0 ? (
-                acceptedFriends.map((friend) => (
-                  <FriendItem
-                    key={friend.user_id}
-                    friend={friend}
-                    setFetchData={setFriendsData}
-                  />
-                ))
+                <div className="flex flex-col">
+                  {acceptedFriends.map((friend) => (
+                    <FriendItem
+                      key={friend.user_id}
+                      friend={friend}
+                      setFetchData={setFriendsData}
+                    />
+                  ))}
+                </div>
               ) : (
-                <p className="p-4 text-sm text-text-2 italic">
+                <p className="p-4 text-xs font-body font-medium text-text-3 italic text-center bg-bg-2/30">
                   Non hai ancora aggiunto amici
                 </p>
               )}
@@ -124,15 +145,17 @@ const Friends = () => {
       const queryRegex = new RegExp(query, "i");
 
       // Cerca nei tuoi amici e richieste locali
-      const localFriendsMatches = (friendsData || []).filter((friend) =>
-        friend.handle?.toLowerCase().match(queryRegex) ||
-        friend.nome?.toLowerCase().match(queryRegex)
+      const localFriendsMatches = (friendsData || []).filter(
+        (friend) =>
+          friend.handle?.toLowerCase().match(queryRegex) ||
+          friend.nome?.toLowerCase().match(queryRegex),
       );
 
       // Cerca negli utenti globali
-      const globalMatches = (globalFriendships || []).filter((friend) =>
-        friend.handle?.toLowerCase().match(queryRegex) ||
-        friend.nome?.toLowerCase().match(queryRegex)
+      const globalMatches = (globalFriendships || []).filter(
+        (friend) =>
+          friend.handle?.toLowerCase().match(queryRegex) ||
+          friend.nome?.toLowerCase().match(queryRegex),
       );
 
       // Unisci e rimuovi eventuali duplicati
@@ -145,7 +168,7 @@ const Friends = () => {
       });
       const allFriends = Array.from(allFriendsMap.values());
       return (
-        <div className="border-2 border-[#E2E8F0] rounded-lg transition-all duration-500 ease-in-out overflow-hidden">
+        <div className="bg-bg-1 rounded-2xl border transition-all duration-300 ease-in-out overflow-hidden max-h-[2000px] opacity-100 border-neutral-300/80 shadow-sm">
           {allFriends.length > 0 ? (
             allFriends.map((friend) => {
               return (

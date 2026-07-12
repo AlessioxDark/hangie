@@ -387,20 +387,42 @@ const getSuspended = async (req) => {
     const { error: risposteError } = await supabase
       .from("risposte_eventi")
       .select(
-        "user_id,is_creator,status, eventi!inner(event_id,gruppi(group_id))",
+        `
+    user_id,
+    is_creator,
+    status,
+    eventi!inner(
+      event_id,
+      gruppi!inner(
+        group_id
+      )
+    )
+  `,
       )
       .eq("status", "accepted")
-      .in("eventi.event_id", eventIds)
-      .in("eventi.gruppi.group_id", groupIds);
-    // risolvere bug ricerca eventi su incognito
+      // Filtro sulla tabella "eventi" relazionata
+      .filter("eventi.event_id", "in", `(${eventIds.join(",")})`)
+      // Filtro sulla tabella "gruppi" annidata dentro eventi
+      .filter("eventi.gruppi.group_id", "in", `(${groupIds.join(",")})`);
+
     if (risposteError) throw risposteError;
 
     const { data: eventParticipants, error: eventParticipantsError } =
       await supabase
         .from("risposte_eventi")
-        .select("status,utente:utenti(*),eventi(*),created_at,is_creator")
-        .in("eventi.event_id", eventIds);
+        .select(
+          `
+      status,
+      created_at,
+      is_creator,
+      utente:utenti(*),
+      eventi!inner(*)
+    `,
+        )
+        // Usa .filter con l'operatore 'in' e formatta l'array come stringa (id1,id2,id3)
+        .filter("eventi.event_id", "in", `(${eventIds.join(",")})`);
 
+    if (eventParticipantsError) throw eventParticipantsError;
     const eventParticipantsMap = eventParticipants.reduce((acc, curr) => {
       if (!acc[curr.eventi.event_id]) acc[curr.eventi.event_id] = [];
       acc[curr.eventi.event_id].push({
@@ -412,7 +434,7 @@ const getSuspended = async (req) => {
       return acc;
     }, {});
     if (eventParticipantsError) throw eventParticipantsError;
-
+    console.log("ev part", eventParticipantsMap);
     const finalData = eventsList.map((e) => {
       return {
         ...e,

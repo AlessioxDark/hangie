@@ -49,7 +49,6 @@ const GroupEventCard = ({
     }
 
     let residuo = distanza_ms;
-    (scadenza_timestamp, distanza_ms);
     const units = [
       {
         label: "y",
@@ -129,102 +128,102 @@ const GroupEventCard = ({
   };
   return (
     <div
-      className={` cursor-pointer 
-			     
-           group relative flex flex-col px-5 bg-white rounded-2xl py-2.5
-    shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)]
-    hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]
-    hover:-translate-y-1 transition-all duration-500 border border-slate-200
-    ${isInactive ? "grayscale opacity-75" : ""}
-  
-          
-		 `}
+      className={`
+    w-full flex flex-col p-4 bg-bg-1 border border-neutral-300/80 rounded-2xl transition-all duration-150 select-none
+    ${isInactive ? "grayscale opacity-60" : "active:scale-[0.99]"}
+  `}
     >
-      <div className="flex flex-row gap-4 2xl:gap-6  py-3 h-full">
-        <div className="relative w-20 flex-shrink-0 overflow-hidden rounded-2xl bg-slate-100">
+      {/* Corpo della Card */}
+      <div className="flex flex-row gap-4 py-1.5 h-full items-start">
+        {/* Immagine di Copertina */}
+        <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-xl bg-bg-2 border border-neutral-300/30">
           <img
             src={cover_img}
             className="h-full w-full object-cover"
-            alt="cover"
+            alt="Copertina evento"
           />
         </div>
-        <div className=" flex flex-col gap-2  flex-1 justify-center">
-          <div className="flex flex-col">
-            <div className="flex flex-row justify-between items-end relative">
-              <time className="text-[10px] font-bold uppercase tracking-widest text-primary">
+
+        {/* Info Testuali dell'Evento */}
+        <div className="flex flex-col gap-2 flex-1 min-w-0">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex flex-row justify-between items-center relative w-full">
+              {/* Data/Ora formattata */}
+              <time className="text-[10px] font-body font-bold uppercase tracking-wider text-primary truncate">
                 {formattedTime}
               </time>
 
-              <div className="flex flex-row gap-2 relative" ref={dropdownRef}>
-                {status == "pending" && (
-                  <div
-                    className={`
-                      
-		      flex items-center gap-2
-		      
-		      rounded-xl
-		      flex-shrink-0
-px-2 py-1 bg-amber-50 text-amber-600  border border-amber-100
-		    `}
-                  >
-                    {currentScreen != "xs" && (
-                      <svg
-                        className="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    )}
-
-                    <span className="text-[10px]  rounded-full  font-bold">
+              {/* Badge di Urgenza e Menu Azioni */}
+              <div
+                className="flex flex-row gap-1.5 items-center relative"
+                ref={dropdownRef}
+              >
+                {status === "pending" && (
+                  <div className="flex items-center gap-1 rounded-md px-1.5 py-0.5 bg-amber-500/10 text-amber-600 border border-amber-500/20 flex-shrink-0">
+                    <span className="text-[9px] font-body font-extrabold uppercase tracking-wide">
                       {getUrgencyText()}
                     </span>
                   </div>
                 )}
-                <div className="w-4 h-4 " onClick={toggleDropdown}>
-                  <KebabMenuIcon />
-                </div>
-                {isDropdownOpen && currentScreen == "xs" && (
-                  <div className="absolute -right-6 top-4 w-30 bg-white shadow-xl rounded-xl border border-slate-100 flex flex-col z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
+
+                {/* Pulsante Menu Kebab */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleDropdown();
+                  }}
+                  className="w-5 h-5 flex items-center justify-center rounded-full text-text-3 active:bg-bg-2 cursor-pointer transition-colors"
+                  aria-label="Opzioni evento"
+                >
+                  <KebabMenuIcon className="w-4 h-4 text-current" />
+                </button>
+
+                {/* Dropdown Menu per azioni rapide */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 top-7 w-36 bg-bg-1 shadow-lg rounded-xl border border-bg-3/80 flex flex-col z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                     <button
-                      className="w-full text-left px-4 py-3 hover:bg-red-50 text-red-600 transition-colors flex items-center gap-2"
-                      onClick={() => {
+                      type="button"
+                      className="w-full text-left px-3.5 py-2.5 active:bg-red-50 text-red-600 font-body font-bold text-xs transition-colors flex items-center gap-2 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleDeleteEvent(event_id, sendSocket);
                       }}
                     >
-                      <span className="font-medium text-xs">
-                        Elimina Evento
-                      </span>
+                      Elimina Evento
                     </button>
                   </div>
                 )}
               </div>
             </div>
 
-            <h3 className="text-base 2xl:text-lg font-bold font-body text-text-1 line-clamp-2 leading-tight ">
+            {/* Titolo Evento */}
+            <h3 className="text-sm font-title font-bold text-text-1 line-clamp-2 leading-snug">
               {titolo}
             </h3>
           </div>
 
-          <div className="grid gap-1.5">
+          {/* Grid delle specifiche (Luogo, Costo, Partecipanti) */}
+          <div className="flex flex-col gap-1 mt-0.5">
             {[
-              { icon: <MapIcon color={"#64748b"} />, text: `${luogo.nome}` },
-              { icon: <DollarIcon color={"#64748b"} />, text: `${costo}$` },
+              { icon: <MapIcon color={"currentColor"} />, text: luogo.nome },
               {
-                icon: <ParticipantsIcon color={"#64748b"} />,
+                icon: <DollarIcon color={"currentColor"} />,
+                text: `${costo} €`,
+              },
+              {
+                icon: <ParticipantsIcon color={"currentColor"} />,
                 text: `${numPartecipanti} partecipanti`,
               },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-slate-500">
-                <div className=" w-5 h-5">{item.icon}</div>
-                <span className="text-xs font-medium truncate">
+              <div
+                key={i}
+                className="flex items-center gap-1.5 text-text-3 min-w-0"
+              >
+                <div className="w-4 h-4 text-text-3 flex-shrink-0 flex items-center justify-center">
+                  {item.icon}
+                </div>
+                <span className="text-xs font-body font-medium truncate">
                   {item.text}
                 </span>
               </div>
@@ -233,49 +232,55 @@ px-2 py-1 bg-amber-50 text-amber-600  border border-amber-100
         </div>
       </div>
 
-      {created_by !== session.user.id && (
-        <div className="flex gap-3 pt-4 border-t border-slate-200">
+      {/* Azioni di Voto: Accetta o Rifiuta (Se non create dall'utente stesso) */}
+      {created_by !== session?.user?.id && (
+        <div className="flex gap-2.5 pt-3 mt-2 border-t border-bg-3/50 flex-shrink-0">
+          {/* Bottone Accetta */}
           <button
-            className={`flex-1 ${status == "accepted" ? "bg-primary text-white" : "bg-gray-50 text-gray-400 border border-gray-200"}  py-3 px-4 rounded-xl   active:scale-[0.97] transition-all duration-200 flex items-center justify-center cursor-pointer text-xs font-bold
-                     hover:bg-primary/80`}
+            type="button"
             disabled={scadenza < Date.now()}
             onClick={(e) => {
               e.stopPropagation();
-              const newStatus = status == "accepted" ? "pending" : "accepted";
-
-              handleEventDecision(
-                event_id,
-                {
-                  status: newStatus,
-                },
-                () => {
-                  sendSocketVoteEvent(newStatus, prevStatus);
-                  setPrevStatus(newStatus);
-                },
-              );
+              const newStatus = status === "accepted" ? "pending" : "accepted";
+              handleEventDecision(event_id, { status: newStatus }, () => {
+                sendSocketVoteEvent(newStatus, prevStatus);
+                setPrevStatus(newStatus);
+              });
             }}
+            className={`
+          flex-1 h-9 rounded-xl font-body text-xs font-bold transition-all active:scale-95 flex items-center justify-center cursor-pointer
+          ${
+            status === "accepted"
+              ? "bg-primary text-white shadow-sm shadow-primary/10"
+              : "bg-bg-2 text-text-2 border border-bg-3/80 active:bg-bg-3/60"
+          }
+          disabled:opacity-40 disabled:cursor-not-allowed
+        `}
           >
             Accetta
           </button>
+
+          {/* Bottone Rifiuta */}
           <button
-            className={`flex-1 ${status == "rejected" ? "bg-red-500 text-white" : "bg-gray-50 text-gray-400 border border-gray-200"}  py-3 px-4 rounded-xl   active:scale-[0.97] transition-all duration-200 flex items-center justify-center cursor-pointer text-xs font-bold
-                     hover:bg-primary/80`}
+            type="button"
             disabled={scadenza < Date.now()}
             onClick={(e) => {
               e.stopPropagation();
-              const newStatus = status == "rejected" ? "pending" : "rejected";
-
-              handleEventDecision(
-                event_id,
-                {
-                  status: newStatus,
-                },
-                () => {
-                  sendSocketVoteEvent(newStatus, prevStatus);
-                  setPrevStatus(newStatus);
-                },
-              );
+              const newStatus = status === "rejected" ? "pending" : "rejected";
+              handleEventDecision(event_id, { status: newStatus }, () => {
+                sendSocketVoteEvent(newStatus, prevStatus);
+                setPrevStatus(newStatus);
+              });
             }}
+            className={`
+          flex-1 h-9 rounded-xl font-body text-xs font-bold transition-all active:scale-95 flex items-center justify-center cursor-pointer
+          ${
+            status === "rejected"
+              ? "bg-red-500 text-white shadow-sm shadow-red-500/10"
+              : "bg-bg-2 text-text-2 border border-bg-3/80 active:bg-bg-3/60"
+          }
+          disabled:opacity-40 disabled:cursor-not-allowed
+        `}
           >
             Rifiuta
           </button>

@@ -106,80 +106,91 @@ const FriendItem = ({ friend, setFetchData, type }) => {
   useEffect(() => {}, [friend]);
   return (
     <div
-      className="flex flex-row justify-between px-3 py-3 border-b border-[#E2E8F0] last:border-b-0 hover:bg-slate-50 transition-colors duration-200 items-center"
-      onClick={(e) => {
-        navigate(`/profile/${friend.handle}`);
-      }}
+      onClick={() => navigate(`/profile/${friend.handle}`)}
+      className="w-full flex flex-row justify-between items-center px-4 py-3 border-b border-bg-3/60 last:border-b-0 active:bg-bg-2 transition-colors select-none cursor-pointer"
     >
-      <div className="flex flex-row items-center gap-3">
-        <div className="w-12 h-12 flex-shrink-0">
+      {/* Info Utente: Avatar e Nome */}
+      <div className="flex flex-row items-center gap-3 min-w-0 flex-1 mr-3">
+        <div className="w-11 h-11 flex-shrink-0">
           <ProfileIcon profile_pic={friend.profile_pic} />
         </div>
         <div className="flex flex-col min-w-0">
-          <h1 className="text-text-1 font-body font-bold truncate text-sm">
+          <h2 className="text-text-1 font-body font-bold text-sm truncate">
             {friend.nome}
-          </h1>
-          <span className="font-body text-xs text-text-2 truncate">
+          </h2>
+          <span className="font-body text-xs text-text-3 truncate">
             @{friend.handle}
           </span>
         </div>
       </div>
 
-      {type == "friend_request" ||
-      (friend.status === "pending" &&
-        friend.sender_id !== session?.user?.id) ? (
-        <div className="flex flex-row gap-2">
+      {/* Stati dell'Azione (Rendering Condizionale) */}
+      <div className="flex flex-row gap-2 flex-shrink-0">
+        {type === "friend_request" ||
+        (friend.status === "pending" &&
+          friend.sender_id !== session?.user?.id) ? (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleAction("accept");
+              }}
+              className="h-9 px-3.5 bg-primary text-white rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
+            >
+              Accetta
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleAction("delete");
+              }}
+              className="h-9 px-3.5 bg-bg-2 text-text-2 border border-bg-3/80 rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
+            >
+              Rifiuta
+            </button>
+          </>
+        ) : friend.status === "accepted" ? (
           <button
-            className="px-3 py-2.5 bg-primary text-white rounded-xl text-xs font-semibold"
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              handleAction("accept");
+              deleteFriend();
             }}
+            className="h-9 px-3.5 bg-red-500/10 text-red-600 rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
           >
-            Accetta
+            Rimuovi
           </button>
+        ) : friend.status === "pending" ? (
           <button
-            className="px-3 py-2.5 bg-gray-50 text-gray-400 border border-gray-200 rounded-xl text-xs font-semibold"
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
               handleAction("delete");
             }}
+            className="h-9 px-3.5 bg-bg-2 text-text-3 border border-bg-3/80 rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
           >
-            Rifiuta
+            Annulla
           </button>
-        </div>
-      ) : friend.status === "accepted" ? (
-        <button
-          className="text-xs px-2 py-1.5 bg-red-500 rounded-xl text-bg-1 font-semibold"
-          onClick={deleteFriend}
-        >
-          Rimuovi Amico
-        </button>
-      ) : friend.status == "pending" ? (
-        <button
-          className="px-3 py-2.5 bg-gray-50 text-gray-400 border border-gray-200 rounded-xl text-xs font-semibold"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            handleAction("delete");
-          }}
-        >
-          Annulla
-        </button>
-      ) : (
-        <button
-          className="px-3 py-2.5 bg-primary text-white rounded-xl text-xs font-semibold"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            handleAction("send");
-          }}
-        >
-          Aggiungi
-        </button>
-      )}
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleAction("send");
+            }}
+            className="h-9 px-3.5 bg-primary text-white rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
+          >
+            Aggiungi
+          </button>
+        )}
+      </div>
     </div>
   );
 };

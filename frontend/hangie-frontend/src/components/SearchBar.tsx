@@ -6,32 +6,31 @@ const SearchBar = ({ query, setQuery }) => {
     setQuery("");
   };
   return (
-    <div
-      className="border border-bg-3 p-1.5 px-3  2xl:p-3 h-1 rounded-4xl flex flex-row justify-between items-center  bg-bg-2 w-full h-full mx-auto focus-within:ring-2 focus-within:ring-primary
-      flex-1 shadow-inner transition-shadow
-    
-    "
-    >
-      <div className="flex gap-2 flex-row w-full items-center group">
-        <div className="w-6 h-6 2xl:w-8 2xl:h-8">
-          <SearchLensIcon />
+    <div className="w-full h-11 px-3 bg-bg-2 border border-bg-3 rounded-full flex flex-row items-center justify-between gap-2 shadow-inner transition-all duration-150 focus-within:ring-2 focus-within:ring-primary ">
+      {/* Icona Lente e Input Text */}
+      <div className="flex flex-row items-center gap-2 flex-1 h-full min-w-0">
+        <div className="w-5 h-5 text-text-3 flex-shrink-0 flex items-center justify-center">
+          <SearchLensIcon color="currentColor" />
         </div>
         <input
           type="text"
-          className="w-full h-full text-base 2xl:text-lg outline-none  flex items-center placeholder-text-2 focus:outline-none font-body text-text-1 min-h-8 2xl:min-h-10 max-h-32 whitespace-pre-wrap "
-          placeholder="Cerca..."
-          onInput={(e) => {
-            setQuery(e.target.value);
-          }}
           value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Cerca..."
+          className="w-full h-full bg-transparent outline-none border-none text-sm font-body text-text-1 placeholder-text-3/80 appearance-none"
         />
       </div>
+
+      {/* Pulsante di Cancellazione Chiara (X) */}
       {query !== "" && (
-        <X
-          size={28}
-          className="text-gray-600 cursor-pointer "
+        <button
+          type="button"
           onClick={handleClearInput}
-        />
+          className="w-7 h-7 flex items-center justify-center rounded-full text-text-3 active:bg-bg-3/60 transition-colors flex-shrink-0 cursor-pointer"
+          aria-label="Cancella ricerca"
+        >
+          <X size={16} strokeWidth={2.5} />
+        </button>
       )}
     </div>
   );

@@ -70,171 +70,174 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
   return (
     <Link
       to={`/events/${event_details.event_id}`}
-      state={currentScreen != "xs" && { backgroundLocation: location }}
+      className="block min-w-[320px] max-w-[350px]"
     >
       <div
-        className={` flex flex-col bg-white border border-gray-200 rounded-xl overflow-hidden
-      shadow-xl transition-all duration-300   hover:shadow-2xl  mr-4
-       2xl:min-w-sm  my-2 cursor-pointer ${event_details.status == "rejected" && "grayscale opacity-75"}`}
         onClick={() => {
           openModal({
             type: "EVENT_MODAL",
             data: { event_id: event_details.event_id },
           });
         }}
+        className={`
+      flex flex-col bg-bg-1 border border-bg-3/60 rounded-2xl overflow-hidden
+      shadow-sm mb-4 cursor-pointer transition-all duration-200 active:scale-[0.99]
+      ${event_details.status === "rejected" ? "grayscale opacity-60 bg-bg-2" : ""}
+    `}
       >
-        <div className="w-58 2xl:w-full  relative cursor-pointer aspect-square 2xl:aspect-[16/9]">
+        {/* Immagine di Copertina con Aspect Ratio Mobile */}
+        <div className="w-full relative aspect-[16/10]">
           <img
-            className="w-full h-full object-cover  "
+            className="w-full h-full object-cover"
             src={event_details.cover_img}
-            alt={event_details.titolo || "Event Cover"}
+            alt={event_details.titolo || "Copertina evento"}
           />
           {event_details.scadenza && (
             <div
-              className={`absolute top-0 right-0 m-3 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-lg font-body ${
+              className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider text-white shadow-sm font-body ${
                 isDeadlinePassed ? "bg-red-600" : "bg-primary"
               }`}
             >
               {isDeadlinePassed
                 ? "CHIUSO"
-                : `Scade: ${formatDate(event_details.scadenza)}`}
+                : `SCADE: ${formatDate(event_details.scadenza)}`}
             </div>
           )}
         </div>
 
-        <div className="p-2.5 2xl:p-5 flex flex-col gap-3">
-          <div className="flex flex-col ">
-            <h1 className="font-bold text-base 2xl:text-2xl text-text-1 leading-snug mb-2">
+        {/* Dettagli dell'Evento */}
+        <div className="p-4 flex flex-col gap-3.5">
+          {/* Titolo e Data Principale */}
+          <div className="flex flex-col gap-1">
+            <h2 className="font-bold text-base text-text-1 leading-snug font-title">
               {event_details.titolo}
-            </h1>
-            <div className="flex items-center gap-1 2xl:gap-2 text-primary text-sm font-semibold">
-              <Calendar className="w-4 h-4" />
-              <span className="font-body text-primary text-xs 2xl:text-sm font-semibold">
+            </h2>
+            <div className="flex items-center gap-1.5 text-primary">
+              <Calendar className="w-3.5 h-3.5" />
+              <span className="font-body text-xs font-bold">
                 {formatDate(event_details.data) || "Data non specificata"}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 2xl:gap-2.5">
-            <div className="flex flex-col gap-1 2xl:gap-2.5 border-gray-200 ">
-              <div className="flex items-center gap-1 2xl:gap-2">
-                <div className="w-5 h-5 2xl:w-6 2xl:h-6 flex-shrink-0">
-                  <MapIcon color={"#64758b"} />
-                </div>
-                <span
-                  className={`font-body truncate text-xs 2xl:text-base text-text-2`}
-                >
-                  {event_details.luogo.nome}
-                </span>
+          {/* Informazioni Logistiche (Luogo e Costo) */}
+          <div className="flex flex-col gap-1.5 py-1 border-y border-bg-3/40">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 text-text-3 flex-shrink-0">
+                <MapIcon color="currentColor" />
               </div>
-
-              <div className="flex items-center gap-1 2xl:gap-2">
-                <div className="w-5 h-5 2xl:w-6 2xl:h-6 flex-shrink-0">
-                  <DollarIcon
-                    color={event_details.costo == 0 ? "#16a34a" : "#64748b"}
-                  />
-                </div>
-                <span className="font-body font-bold text-xs 2xl:text-base ">
-                  {event_details.costo > 0 ? (
-                    <span className="text-green-600">
-                      {event_details.costo}€
-                    </span>
-                  ) : (
-                    <span className="text-green-600">Gratuito</span>
-                  )}
-                </span>
-              </div>
+              <span className="font-body text-xs text-text-2 truncate">
+                {event_details.luogo.nome}
+              </span>
             </div>
 
-            <div className="">
-              <div className="col-span-2 flex items-center gap-2 pt-3 border-t border-gray-200 font-body">
-                <div className="w-5 h-5 2xl:w-6 2xl:h-6">
-                  <ParticipantsIcon color={"#64758b"} />
-                </div>
-                <span className="text-xs 2xl:text-base font-body text-text-2">
-                  <span className="font-bold text-text-2 ">
-                    {acceptedParticipants}
-                  </span>{" "}
-                  {acceptedParticipants === 1 ? "persona ha" : "persone hanno"}{" "}
-                  confermato
-                </span>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 flex-shrink-0">
+                <DollarIcon
+                  color={event_details.costo === 0 ? "#16a34a" : "#64748b"}
+                />
               </div>
-
-              <div className="flex justify-between items-center pt-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 2xl:w-12 2xl:h-12 flex-shrink-0">
-                    <ProfileIcon profile_pic={utenti.profile_pic} />
-                  </div>
-                  <span className="font-medium text-xs 2xl:text-sm text-text-2 font-body truncate">
-                    Creato da:
-                    <span className="font-semibold block text-sm 2xl:text-base text-text-1 leading-none">
-                      {event_details.utente?.nome}
-                    </span>
-                  </span>
-                </div>
-              </div>
+              <span
+                className={`font-body font-bold text-xs ${event_details.costo === 0 ? "text-green-600" : "text-text-1"}`}
+              >
+                {event_details.costo > 0
+                  ? `${event_details.costo}€`
+                  : "Gratuito"}
+              </span>
             </div>
           </div>
 
-          <div className="flex gap-2   ">
-            {event_details.created_by !== session.user.id ? (
-              <div className="w-full flex flex-row gap-4">
-                <button
-                  className={`flex-1 ${event_details.status == "accepted" ? "bg-primary text-white" : "bg-gray-50 text-gray-400 border border-gray-200"}  py-3 px-6 rounded-xl   active:scale-[0.97] transition-all duration-200 flex items-center justify-center cursor-pointer font-bold
-                     hover:bg-primary/80`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    const newStatus =
-                      event_details.status == "accepted"
-                        ? "pending"
-                        : "accepted";
-
-                    handleEventDecision(
-                      event_details.event_id,
-                      {
-                        status: newStatus,
-                      },
-                      () => {
-                        sendSocketVoteEvent(newStatus, prevStatus);
-                        setPrevStatus(newStatus);
-                      },
-                    );
-                  }}
-                  disabled={event_details.scadenza < Date.now()}
-                >
-                  Accetta
-                </button>
-
-                <button
-                  className={`flex-1 ${event_details.status == "rejected" ? "bg-red-500 text-white" : "bg-gray-50 text-gray-400 border border-gray-200"}  py-3 px-6 rounded-xl   active:scale-[0.97] transition-all duration-200 flex items-center justify-center cursor-pointer font-bold
-                     hover:bg-primary/80`}
-                  disabled={event_details.scadenza < Date.now()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    const newStatus =
-                      event_details.status == "rejected"
-                        ? "pending"
-                        : "rejected";
-
-                    handleEventDecision(
-                      event_details.event_id,
-                      {
-                        status: newStatus,
-                      },
-                      () => {
-                        sendSocketVoteEvent(newStatus, prevStatus);
-                        setPrevStatus(newStatus);
-                      },
-                    );
-                  }}
-                >
-                  Rifiuta
-                </button>
+          {/* Contatore Partecipanti e Profilo Creatore */}
+          <div className="flex flex-row justify-between items-center gap-2">
+            <div className="flex items-center gap-2 text-text-2">
+              <div className="w-4 h-4 flex-shrink-0">
+                <ParticipantsIcon color="currentColor" />
               </div>
-            ) : null}
+              <p className="text-[11px] font-body">
+                <span className="font-bold text-text-1">
+                  {acceptedParticipants}
+                </span>{" "}
+                {acceptedParticipants === 1 ? "confermato" : "confermati"}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 max-w-[50%]">
+              <div className="w-6 h-6 flex-shrink-0">
+                <ProfileIcon profile_pic={utenti?.profile_pic} />
+              </div>
+              <span className="font-body text-[11px] text-text-2 truncate">
+                Da:{" "}
+                <span className="font-semibold text-text-1">
+                  {event_details.utente?.nome}
+                </span>
+              </span>
+            </div>
           </div>
+
+          {/* Pulsanti di Azione / Decisione (Solo se non siamo i creatori) */}
+          {event_details.created_by !== session.user.id && (
+            <div className="flex flex-row gap-2 mt-1">
+              {/* Tasto Accetta */}
+              <button
+                disabled={event_details.scadenza < Date.now()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const newStatus =
+                    event_details.status === "accepted"
+                      ? "pending"
+                      : "accepted";
+                  handleEventDecision(
+                    event_details.event_id,
+                    { status: newStatus },
+                    () => {
+                      sendSocketVoteEvent(newStatus, prevStatus);
+                      setPrevStatus(newStatus);
+                    },
+                  );
+                }}
+                className={`flex-1 py-2.5 px-4 rounded-xl font-body font-bold text-xs transition-all active:scale-[0.95] cursor-pointer ${
+                  event_details.status === "accepted"
+                    ? "bg-primary text-white shadow-sm shadow-primary/20"
+                    : "bg-bg-2 text-text-2 border border-bg-3/60 active:bg-bg-3/40"
+                }`}
+              >
+                {event_details.status === "accepted"
+                  ? "Confermato ✓"
+                  : "Accetta"}
+              </button>
+
+              {/* Tasto Rifiuta */}
+              <button
+                disabled={event_details.scadenza < Date.now()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const newStatus =
+                    event_details.status === "rejected"
+                      ? "pending"
+                      : "rejected";
+                  handleEventDecision(
+                    event_details.event_id,
+                    { status: newStatus },
+                    () => {
+                      sendSocketVoteEvent(newStatus, prevStatus);
+                      setPrevStatus(newStatus);
+                    },
+                  );
+                }}
+                className={`flex-1 py-2.5 px-4 rounded-xl font-body font-bold text-xs transition-all active:scale-[0.95] cursor-pointer ${
+                  event_details.status === "rejected"
+                    ? "bg-red-500 text-white shadow-sm shadow-red-500/10"
+                    : "bg-bg-2 text-text-2 border border-bg-3/60 active:bg-bg-3/40"
+                }`}
+              >
+                {event_details.status === "rejected"
+                  ? "Rifiutato ✕"
+                  : "Rifiuta"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </Link>

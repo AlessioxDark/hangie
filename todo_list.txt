@@ -1,1 +1,5 @@
 quando metto da accepted a pending home non si aggiorna
+
+partecipanti sono sbagliati in eventdetails
+
+troppo ritardo quando invio messaggi

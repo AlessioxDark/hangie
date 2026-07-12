@@ -105,258 +105,193 @@ const EventDetails = ({
     .map((risposta) => {
       return risposta.utenti.nome;
     });
-  partecipanti;
   return (
-    <div className="">
-      <div className="flex flex-col gap-6">
-        <div className="w-full flex justify-between">
-          <h1 className="text-text-1 font.body font-bold text-4xl">{titolo}</h1>
-          <div
-            className="  text-text-1 cursor-pointer"
-            onClick={() => {
-              navigate(-1);
-            }}
-          >
-            <X width={40} height={40} />
-          </div>
-        </div>
-        <div className="w-full relative overflow-hidden rounded-xl ">
+    <div className="w-full bg-bg-1 p-4 pb-8">
+      <div className="flex flex-col gap-5">
+        {/* Header: Titolo dell'evento e pulsante di chiusura */}
+        <div className="w-full flex items-start justify-between gap-4">
+          <h1 className="text-text-1 font-title font-bold text-xl leading-tight flex-1">
+            {titolo}
+          </h1>
           <button
-            className={`absolute top-1/2 -translate-y-1/2 left-4 p-2 rounded-full z-20 
-                        bg-white/70 hover:bg-white transition-opacity duration-300 shadow-md 
-                        ${
-                          currentCarouselIndex === 0
-                            ? "opacity-30 cursor-not-allowed"
-                            : "opacity-100 cursor-pointer"
-                        }`}
-            onClick={handlePrev}
-            disabled={currentCarouselIndex === 0}
-            aria-label="Immagine precedente"
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 flex items-center justify-center rounded-full text-text-1 active:bg-bg-2 transition-colors cursor-pointer flex-shrink-0"
+            aria-label="Chiudi e torna indietro"
           >
-            <ChevronLeft />
+            <X width={24} height={24} />
           </button>
+        </div>
+
+        {/* Carousel Immagini (Ottimizzato per lo scorrimento) */}
+        <div className="w-full relative overflow-hidden rounded-xl bg-bg-2">
           <div
-            className={`flex flex-row gap-4 transition-transform duration-500 ease-in-out`}
             ref={carouselRef}
+            className="flex flex-row gap-2 transition-transform duration-500 ease-in-out"
             style={{
               transform: `translateX(-${currentCarouselIndex * scrollWidth}px)`,
             }}
           >
-            {(event_imgs || []).map((img_url, index) => {
-              return (
-                <img
-                  key={index}
-                  ref={index === 0 ? imageRef : null}
-                  className="aspect-[4/3] w-1/3 flex-shrink-0 object-cover rounded-lg"
-                  src={img_url}
-                  alt={`Immagine evento ${index + 1}`}
-                  loading="lazy"
-                />
-              );
-            })}
-          </div>
-
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
-            {(
-              Array.from({
-                length: Math.ceil(event_imgs?.length / 3),
-              }) || []
-            ).map((_, index) => (
-              <div
+            {(event_imgs || []).map((img_url, index) => (
+              <img
                 key={index}
-                className={`w-2.5 h-2.5 rounded-full cursor-pointer transition-colors duration-300 
-                                    ${
-                                      index === currentCarouselIndex
-                                        ? "bg-primary"
-                                        : "bg-bg-1"
-                                    }`}
-                onClick={() => setCurrentCarouselIndex(index)}
-                aria-label={`Vai all'immagine ${index + 1}`}
+                ref={index === 0 ? imageRef : null}
+                className="aspect-[16/10] w-full flex-shrink-0 object-cover rounded-xl"
+                src={img_url}
+                alt={`Immagine evento ${index + 1}`}
+                loading="lazy"
               />
             ))}
           </div>
 
-          <button
-            className={`absolute top-1/2 -translate-y-1/2 right-4 p-2 rounded-full z-20 
-                        bg-white/70 hover:bg-white transition-opacity duration-300 shadow-md 
-                        ${
-                          currentCarouselIndex === (event_imgs?.length || 0)
-                            ? "opacity-30 cursor-not-allowed"
-                            : "opacity-100 cursor-pointer"
-                        }`}
-            onClick={handleNext}
-            disabled={currentCarouselIndex === (event_imgs?.length || 0) - 1}
-            aria-label="Immagine successiva"
-          >
-            <ChevronRight />
-          </button>
+          {/* Indicatori a punti (Dots) */}
+          {(event_imgs?.length || 0) > 1 && (
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center space-x-1.5 z-10">
+              {(
+                Array.from({
+                  length: Math.ceil((event_imgs?.length || 0) / 3),
+                }) || []
+              ).map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentCarouselIndex
+                      ? "bg-primary w-4"
+                      : "bg-bg-1/60"
+                  }`}
+                  onClick={() => setCurrentCarouselIndex(index)}
+                  aria-label={`Vai alla diapositiva ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 flex items-start gap-4 p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-            <div className="w-12 h-12 text-white">
-              <CalendarIcon color={"#2463eb"} />
+        {/* Griglia Dettagli Infobox (Quando, Dove, Costo) */}
+        <div className="flex flex-col gap-3">
+          {/* Box: Quando */}
+          <div className="flex items-center gap-4 p-4 bg-bg-2 border border-bg-3/60 rounded-xl">
+            <div className="w-10 h-10 text-primary flex-shrink-0">
+              <CalendarIcon color="currentColor" />
             </div>
-            <div className="flex-1">
-              <p className="text-lg font-bold text-primary uppercase tracking-wide mb-1 font-body">
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-bold text-primary uppercase tracking-wider font-title mb-0.5">
                 Quando
               </p>
-              <div>
-                <span className="font-body text-base text-text-1">
-                  {formatDate(data)}
-                </span>{" "}
-                <span className="font-body  text-primary font-bold text-lg">
+              <p className="font-body text-sm text-text-1 font-medium">
+                {formatDate(data)}{" "}
+                <span className="text-primary font-bold">
                   alle {formatTime(data)}
                 </span>
-              </div>
+              </p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-            <div className="w-12 h-12 text-white">
-              <MapIcon color={"#008236"} />
-            </div>
-            <div>
-              <p className="font-body text-lg font-bold text-green-700 uppercase tracking-wide mb-1">
+          {/* Griglia a due colonne per Dove e Costo */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Box: Dove */}
+            <div className="flex flex-col gap-1 p-4 bg-bg-2 border border-bg-3/60 rounded-xl">
+              <div className="w-8 h-8 text-text-2 mb-1">
+                <MapIcon color="currentColor" />
+              </div>
+              <p className="text-[11px] font-bold text-text-2 uppercase tracking-wider font-title">
                 Dove
               </p>
-              <div>
-                <p className="font-body font-bold text-xl text-text-1">
+              <div className="min-w-0">
+                <p className="font-body font-bold text-sm text-text-1 truncate">
                   {luoghi?.nome}
                 </p>
-                <p className="font-body  text-text-2">
+                <p className="font-body text-xs text-text-3 truncate">
                   {luoghi?.indirizzo}, {luoghi?.citta}
                 </p>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-xl border border-purple-200">
-            <div className="w-12 h-12 text-white">
-              <DollarIcon color={"#8200db"} />
-            </div>
-            <div>
-              <p className="font-body text-lg font-semibold text-purple-700 uppercase tracking-wide mb-1">
+            {/* Box: Costo */}
+            <div className="flex flex-col gap-1 p-4 bg-bg-2 border border-bg-3/60 rounded-xl">
+              <div className="w-8 h-8 text-text-2 mb-1">
+                <DollarIcon color="currentColor" />
+              </div>
+              <p className="text-[11px] font-bold text-text-2 uppercase tracking-wider font-title">
                 Costo
               </p>
-              <p className="text-3xl font-bold text-text-1">
-                €{costo?.toFixed(2)}
-              </p>
-              <p className="text-base text-text-2">a persona</p>
+              <div>
+                <p className="text-base font-black text-text-1">
+                  €{costo?.toFixed(2)}
+                </p>
+                <p className="text-[11px] text-text-3">a persona</p>
+              </div>
             </div>
           </div>
         </div>
-        <div className="font-body text-text-1 flex flex-col gap-3 ">
-          <h1 className="text-2xl text-text-1 font-body font-bold">
+
+        {/* Sezione: Descrizione */}
+        <div className="flex flex-col gap-1.5 mt-1">
+          <h2 className="text-sm font-title font-bold text-text-2 uppercase tracking-wider">
             Descrizione
-          </h1>
-
-          <div className="text-lg">
-            <div className="">
-              <span className="font-body text-text-1">
-                {descrizione?.slice(0, descLimit)}
+          </h2>
+          <p className="text-[11px] font-body text-text-1 leading-relaxed">
+            {descrizione?.slice(0, descLimit)}
+            {descrizione?.length > 350 && (
+              <span
+                className="ml-1.5 font-bold text-primary active:opacity-75 cursor-pointer inline-block"
+                onClick={() =>
+                  setDescLimit(descLimit === 350 ? descrizione.length : 350)
+                }
+              >
+                {descLimit === 350 ? "Leggi tutto" : "Leggi meno"}
               </span>
-              {descrizione?.length > 350 &&
-                (descLimit == 350 ? (
-                  <span
-                    className=" ml-2 font-body font-bold text-primary  cursor-pointer"
-                    onClick={() => {
-                      setDescLimit(descrizione?.length);
-                    }}
-                  >
-                    Leggi tutto
-                  </span>
-                ) : (
-                  <span
-                    onClick={() => {
-                      setDescLimit(350);
-                    }}
-                    className=" ml-2 font-body font-bold text-primary cursor-pointer"
-                  >
-                    Leggi meno
-                  </span>
-                ))}
-            </div>
-          </div>
+            )}
+          </p>
         </div>
 
-        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl ring ring-gray-300">
-          <div className="w-16 h-16">
+        {/* Profilo Organizzatore */}
+        <div className="flex items-center gap-3 p-3 bg-bg-2 border border-bg-3/40 rounded-xl">
+          <div className="w-10 h-10 flex-shrink-0">
             <ProfileIcon profile_pic={utenti?.profile_pic} />
           </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-text-3 uppercase tracking-wider font-title">
               Organizzatore
             </p>
-            <p className="text-lg font-bold text-gray-900">
+            <p className="text-sm font-bold text-text-1 truncate font-body">
               {utenti?.creatore}
             </p>
           </div>
         </div>
 
-        <div className="col-span-2 flex items-center  p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 justify-between">
-          <div className="flex flex-row gap-4">
-            <div className="w-12 h-12 text-white">
-              <ParticipantsIcon color={"#2463eb"} />
+        {/* Box Partecipanti Completo */}
+        <div
+          onClick={() => setCurrentPage("participants")}
+          className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-xl cursor-pointer transition-all active:bg-primary/10"
+        >
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-8 h-8 text-primary flex-shrink-0">
+              <ParticipantsIcon color="currentColor" />
             </div>
-            <div className="flex-1">
-              <p className="text-lg font-bold text-primary uppercase tracking-wide mb-1 font-body">
-                PARTECIPANTI
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-bold text-primary uppercase tracking-wider font-title mb-0.5">
+                Partecipanti
               </p>
-              <div>
-                <span className="font-body text-base text-text-1">
-                  All'evento Partecipano anche
-                </span>{" "}
-                <span className="font-body  text-primary font-bold ">
+              <p className="text-xs text-text-1 font-body truncate">
+                Insieme a{" "}
+                <span className="text-primary font-semibold">
                   {partecipanti?.join(", ")}
                 </span>
-              </div>
+              </p>
             </div>
           </div>
-          <div
-            className="w-14 h-14 cursor-pointer "
-            onClick={() => {
-              setCurrentPage("participants");
-            }}
-          >
+          <div className="w-5 h-5 text-primary flex-shrink-0 ml-2">
             <ChevronRight />
           </div>
         </div>
-        {event_status == "pending" && (
-          <div className="w-full flex justify-between flex-row gap-12">
-            <button
-              className="w-full bg-primary text-bg-1 font-bold rounded-2xl text-2xl 
-            
 
-		            px-4 py-4
-		            hover:bg-primary/80
-		            transition-colors
-		            duration-300
-
-		             
-		             cursor-pointer
-		          
-            "
-            >
+        {/* Sticky Action Buttons per Evento In Sospeso */}
+        {event_status === "pending" && (
+          <div className="flex items-center gap-3 w-full mt-3">
+            <button className="flex-1 bg-primary text-bg-1 font-bold py-3 rounded-xl text-sm font-body shadow-sm shadow-primary/20 transition-all active:scale-[0.97] cursor-pointer">
               Accetta
             </button>
-            <button
-              className="w-full  font-bold rounded-2xl text-2xl 
-            
-
-		            px-4 py-4
-		           
-		            transition-colors
-		            duration-300
-
-		              bg-bg-1 text-text-2
-		            border-2 border-text-3/60
-		           
-		            hover:bg-bg-2/80
-		            hover:border-text-2/80
-		             cursor-pointer
-		          "
-            >
+            <button className="flex-1 bg-bg-2 text-text-2 font-bold py-3 rounded-xl text-sm font-body border border-bg-3/60 transition-all active:scale-[0.97] active:bg-bg-3/20 cursor-pointer">
               Rifiuta
             </button>
           </div>

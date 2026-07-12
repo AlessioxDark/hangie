@@ -132,97 +132,121 @@ const Profile = () => {
     );
   };
   return (
-    <div className="flex flex-col bg-bg-1">
-      {/* ── HEADER CARD ── */}
-      <div className="bg-bg-1 border-b border-bg-3">
-        {/* Avatar + Name + Karma */}
+    <div className="w-full min-h-screen bg-bg-1 flex flex-col select-none">
+      {/* ── HEADER NAVIGATION BAR ── */}
+      <div className="w-full px-4 h-14 border-b border-bg-3/60 flex flex-row items-center justify-between sticky top-0 bg-bg-1/95 backdrop-blur-md z-[100]">
         {!isOwnProfile ? (
-          <div>
-            <div className="w-8 h-8" onClick={() => navigate(-1)}>
-              <ChevronLeft color={"#2463eb"} />
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 -ml-1.5 flex items-center justify-center rounded-full text-primary active:bg-bg-2 cursor-pointer transition-colors"
+            aria-label="Torna indietro"
+          >
+            <ChevronLeft size={22} strokeWidth={2.5} className="text-current" />
+          </button>
         ) : (
-          <div className="w-full flex justify-end px-4 pt-2.5">
-            {" "}
-            <button
-              className=" px-5 py-2 text-white text-sm font-body  bg-red-500 font-semibold rounded-2xl active:bg-red-400 transition-all shadow-sm"
-              onClick={handleLogoutUser}
-            >
-              Logout
-            </button>
+          <div className="font-title text-base font-bold text-text-1">
+            Il tuo Profilo
           </div>
         )}
-        {/* rimozione ecc firneds, eventi e cosi in login ospite*/}
-        <div
-          className={`flex items-center justify-between gap-3  ${isOwnProfile && "pt-6"} pb-5 min-w-0 `}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden shrink-0">
+
+        {isOwnProfile && (
+          <button
+            type="button"
+            onClick={handleLogoutUser}
+            className="h-8 px-3.5 bg-red-500/10 text-red-600 font-body font-bold text-xs rounded-xl active:scale-95 transition-transform cursor-pointer flex items-center justify-center"
+          >
+            Logout
+          </button>
+        )}
+      </div>
+
+      {/* ── CORPO PROFILO (INFORMAZIONI UTENTE) ── */}
+      <div className="w-full flex flex-col bg-bg-1 border-b border-bg-3/50">
+        {/* Blocco Dati Utente: Avatar, Nome, Karma */}
+        <div className="flex flex-row items-center justify-between gap-3 px-4 pt-4 pb-3 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden bg-bg-2 border border-bg-3/30 shrink-0">
               <ProfileIcon profile_pic={profileData?.profile_pic} />
             </div>
             <div className="min-w-0">
-              <h1 className="text-base font-black leading-tight text-text-1 truncate">
+              <h1 className="text-base font-title font-bold leading-tight text-text-1 truncate">
                 {profileData?.nome ?? "Utente"}
               </h1>
-              <p className="text-sm mt-0.5 text-text-3 truncate">
+              <p className="text-xs font-body text-text-3 truncate mt-0.5">
                 @{profileData?.handle}
               </p>
             </div>
           </div>
-          <KarmaBadge points={karma} />
+          <div className="shrink-0">
+            <KarmaBadge points={karma} />
+          </div>
         </div>
-        {/* Bio */}
+
+        {/* Sezione Biografia Utente */}
         {profileData?.biografia && (
-          <div className="mx-4 mb-4 px-4 py-3 rounded-xl">
-            <p className="text-sm leading-relaxed break-words text-text-2">
+          <div className="mx-4 mb-4 px-3.5 py-2.5 bg-bg-2/40 border border-bg-3/40 rounded-xl">
+            <p className="text-xs font-body leading-relaxed break-words text-text-2 whitespace-pre-line">
               {profileData.biografia}
             </p>
           </div>
         )}
-        {/* Stats */}
-        <div className="flex items-center justify-around px-4 pb-5">
+
+        {/* Griglia Contatori Statistiche */}
+        <div className="flex items-center justify-around px-2 pb-4 pt-1">
           <StatBlock
             value={profileData?.acceptedEventsCount || 0}
             label="Uscite"
           />
           <Sep />
           <StatBlock
-            value={profileData?.createdEventsCount}
+            value={profileData?.createdEventsCount || 0}
             label="Organizzate"
           />
           <Sep />
-          <StatBlock value={profileData?.pastAttendedCount} label="Passate" />
+          <StatBlock
+            value={profileData?.pastAttendedCount || 0}
+            label="Passate"
+          />
           <Sep />
-          <StatBlock value={profileData?.friendsCount} label="Amici" />
+          <StatBlock value={profileData?.friendsCount || 0} label="Amici" />
         </div>
-        {/* CTA */}
-        <div className="px-4 pb-4 bg-bg-1">
-          {!isOwnProfile && (
-            <div className="flex gap-3">
-              <button className="flex-1 py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-95 bg-primary">
-                Aggiungi amico
-              </button>
-            </div>
-          )}
-        </div>
-        {/* Tabs */}
+
+        {/* Pulsante di Invito/Azione Rapida (CTA Esterna) */}
+        {!isOwnProfile && (
+          <div className="px-4 pb-4">
+            <button
+              type="button"
+              className="w-full h-11 rounded-xl font-body text-xs font-bold text-white bg-primary active:scale-[0.98] transition-all cursor-pointer shadow-sm shadow-primary/10 flex items-center justify-center"
+            >
+              Aggiungi amico
+            </button>
+          </div>
+        )}
+
+        {/* Selettore a Tabulazione */}
         <TabBar active={activeTab} onChange={setActiveTab} />
       </div>
 
-      {/* ── EVENTI ── */}
-      <div className="px-4 pt-4 space-y-3 flex flex-col">
+      {/* ── SEZIONE EVENTI FILTRATI (LISTA DINAMICA) ── */}
+      <div className="px-4 pt-4 flex flex-col gap-3 flex-1">
         {filtered.length === 0 ? (
           <EmptyState tab={activeTab} />
         ) : (
-          filtered.map((event) => <EventCard key={event.id} event={event} />)
+          <div className="flex flex-col gap-3 w-full">
+            {filtered.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        )}
+
+        {filtered.length > 0 && (
+          <p className="text-center font-body text-[11px] font-bold text-text-3 pt-4 pb-6 tracking-wide">
+            {filtered.length}{" "}
+            {filtered.length !== 1 ? "eventi trovati" : "evento trovato"}
+          </p>
         )}
       </div>
-      {filtered.length > 0 && (
-        <p className="text-center text-xs mt-6 pb-2 font-semibold text-text-3">
-          {filtered.length} event{filtered.length !== 1 ? "i" : "o"}
-        </p>
-      )}
     </div>
   );
 };

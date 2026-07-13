@@ -31,7 +31,7 @@ const LocationAutocomplete = ({ onLocationSelect, error }) => {
 
             return {
               // LocationIQ usa stringhe per lat e lon, quindi usiamo parseFloat per sicurezza
-              place_id: `${place.place_id}_${place.osm_id}`,
+              place_id: `${place.osm_id}_${place.osm_type}`,
               formattedAddress: place.display_name || "",
               placeLabel:
                 place.display_place ||

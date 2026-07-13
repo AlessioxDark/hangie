@@ -131,7 +131,7 @@ const FormInputCollection = ({
                     <LocationAutocomplete
                       error={errors.locationData}
                       onLocationSelect={(data) => {
-                        // Registriamo manualmente l'oggetto nel form di react-hook-form
+                        console.log("PLACE SELEZIONATO:", data); // 👈 aggiungi questo
                         methods.setValue("locationData", data, {
                           shouldValidate: true,
                         });

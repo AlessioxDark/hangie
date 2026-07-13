@@ -183,7 +183,6 @@ const getEvent = async (req) => {
 
 const getOrCreateLuogo = async (realBody) => {
   const { nome_luogo, locationData } = realBody;
-
   if (!locationData || !locationData.place_id) {
     return {
       data: null,
@@ -216,6 +215,7 @@ const newEvent = async (req) => {
     const user = req.user;
     if (!req.body || !req.body.data)
       throw { message: "Dati evento mancanti o malformati" };
+    console.log(req.body);
     const { images, locationData, nome_luogo, ...realBody } = req.body.data;
 
     // 🌟 FIX 1: Estraiamo "data" e lo ridenominiamo in "luogoId" per allinearlo al return di getOrCreateLuogo

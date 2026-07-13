@@ -78,6 +78,7 @@ const CreateEventForm = () => {
   const methods = useForm({
     resolver: zodResolver(EventSchema),
     mode: "onChange",
+    shouldUnregister: false, // 🛡️ Mantiene vivi i dati nel registro anche se cambi step!
   });
 
   const {
@@ -88,6 +89,10 @@ const CreateEventForm = () => {
     setError,
     clearErrors,
   } = methods;
+  useEffect(() => {
+    console.log("📋 ERRORS CORRENTI:", errors);
+    console.log("📋 VALUES CORRENTI:", methods.getValues());
+  }, [errors]);
   const { currentGroup, currentGroupData } = useChat();
   const { error: errorsApi } = useApi();
   const { currentScreen } = useScreen();
@@ -105,8 +110,8 @@ const CreateEventForm = () => {
   };
 
   const onSubmit = async (data) => {
+    console.log("✅ ONSUBMIT CHIAMATO CON:", data);
     if (checkImagesError()) return;
-
     const handleUploadAndSocket = async (dataArrived) => {
       try {
         clearErrors("root");
@@ -164,6 +169,7 @@ const CreateEventForm = () => {
     executeApiCall(
       "add_event",
       () => {
+        console.log(data);
         return ApiCalls.addNewEvent(session.access_token, {
           data: {
             ...data,
@@ -205,6 +211,15 @@ const CreateEventForm = () => {
       if (imageErr) return;
     }
     const result = await trigger(fieldsByStep[currentStep]);
+    console.log(
+      "🔍 TRIGGER RESULT:",
+      result,
+      "STEP:",
+      currentStep,
+      "VALUES:",
+      methods.getValues(),
+    );
+
     if (result && currentStep < 3) {
       setCurrentStep((lastStep) => lastStep + 1);
     }
@@ -216,6 +231,11 @@ const CreateEventForm = () => {
       setMobileView("");
     }
   };
+
+  useEffect(() => {
+    console.log("VALUES ATTUALI:", methods.getValues());
+    console.log("ERRORS ATTUALI:", errors);
+  }, [currentStep]);
   useEffect(() => {
     if (errorsApi?.add_event) {
       setError("root", {
@@ -233,13 +253,7 @@ const CreateEventForm = () => {
   }
   return (
     <div className="w-full h-screen bg-bg-1 flex flex-col overflow-hidden relative">
-      <form
-        className="flex flex-col h-full"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(onSubmit)();
-        }}
-      >
+      <form className="flex flex-col h-full" onSubmit={handleSubmit(onSubmit)}>
         {/* Header della Schermata */}
         <div className="px-4 py-3 border-b border-bg-3/60 bg-bg-1 flex-shrink-0 flex justify-between items-center">
           <div className="flex flex-row gap-2 items-center min-w-0">
@@ -277,12 +291,9 @@ const CreateEventForm = () => {
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 h-20 px-4 bg-bg-1/95 backdrop-blur-md border-t border-bg-3/40 flex items-center justify-center z-50">
-          <div
-            className="fixed bottom-5 right-5 flex items-center justify-center  font-body text-xs text-primary bg-primary p-3 rounded-full"
-            onClick={handleNextStepMobile}
-          >
+          <div className="fixed bottom-5 right-5 flex items-center justify-center font-body text-xs text-primary bg-primary p-3 rounded-full">
             {currentStep <= 2 ? (
-              <div className="w-6 h-6">
+              <div className="w-6 h-6" onClick={handleNextStepMobile}>
                 <ChevronRight color="#ffffff" />
               </div>
             ) : (

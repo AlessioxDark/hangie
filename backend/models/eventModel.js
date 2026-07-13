@@ -68,7 +68,6 @@ const getAll = async (req) => {
         partecipanti: eventParticipantsMap[e?.event_id],
       };
     });
-    console.log("adesso2", EVENTSINPAGE, finalData.length);
     return { data: finalData, error: null };
   } catch (err) {
     return { data: null, error: err };

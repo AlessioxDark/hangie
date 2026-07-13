@@ -1,19 +1,27 @@
 const supabase = require("../config/db");
 
 const messageHandlers = (io, socket) => {
-  socket.on("send_message", async (message, group_id, token, groupData) => {
+  socket.on("send_message", async (message, group_id, token, local_id) => {
+    // 🚀 ORA QUESTO LOG DEVE COMPARIRE AL 100%
+    console.log("--- CHIAMATA RICEVUTA NEL BACKEND ---");
+    console.log("Messaggio:", message);
+    console.log("Group ID:", group_id);
+    console.log("Local ID:", local_id);
+
     try {
       const {
         data: { user },
         error: tokenError,
       } = await supabase.auth.getUser(token);
       if (tokenError) throw tokenError;
+
       const { data: participantsData, error: participantsError } =
         await supabase
           .from("partecipanti_gruppo")
           .select("*,user_id:partecipante_id")
           .eq("group_id", group_id);
       if (participantsError) throw participantsError;
+
       const { data: messageData, error: messageError } = await supabase
         .from("messaggi")
         .insert([{ content: message, user_id: user.id, group_id }])
@@ -22,71 +30,60 @@ const messageHandlers = (io, socket) => {
       if (messageError) throw messageError;
 
       const messageId = messageData.message_id;
+
       const rowStatus = participantsData
         .filter((p) => p.user_id !== user.id)
-        .map((partecipante) => {
-          return {
-            message_id: messageId,
-            user_id: partecipante.user_id,
-          };
-        });
+        .map((p) => ({ message_id: messageId, user_id: p.user_id }));
 
       const notificationInsert = participantsData
         .filter((p) => p.user_id !== user.id)
-        .map((partecipante) => {
-          return {
-            type: "new_message",
-            sender_id: user.id,
-            is_read: false,
-            group_id,
-            user_id: partecipante.user_id,
-            message_id: messageId,
-          };
-        });
-      const { error: errorStatus } = await supabase
-        .from("messaggi_status")
-        .insert(rowStatus)
-        .select();
-      if (errorStatus) throw errorStatus;
-      const { data: userInfo, error: userError } = await supabase
+        .map((p) => ({
+          type: "new_message",
+          sender_id: user.id,
+          is_read: false,
+          group_id,
+          user_id: p.user_id,
+          message_id: messageId,
+        }));
+
+      await supabase.from("messaggi_status").insert(rowStatus);
+
+      const { data: sender, error: userError } = await supabase
         .from("utenti")
         .select("*")
         .eq("user_id", user.id)
         .single();
-      const sender = userInfo;
       if (userError) throw userError;
 
       participantsData.forEach((p) => {
         io.to(p.user_id).emit("receive_message", {
-          message: message,
+          message,
           message_id: messageId,
+          local_id, // Passato correttamente senza filtri o nodi
           group_id,
           sender_id: user.id,
-          sender: sender,
+          sender,
         });
+
         if (p.user_id !== user.id) {
           io.to(user.id).emit("new_notification", {
             type: "new_message",
-            sender: sender,
+            sender,
             receiver: p,
             group_id,
             messaggio: { content: message },
-            gruppo: groupData,
+            gruppo: { group_id }, // Costruiamo un mini oggetto al volo invece di passare lo stato intero
             user_id: p.user_id,
             created_at: new Date(),
             is_read: false,
           });
         }
       });
-      const { error: errorNotification } = await supabase
-        .from("notifiche")
-        .insert(notificationInsert);
-      if (errorNotification) throw errorNotification;
+
+      await supabase.from("notifiche").insert(notificationInsert);
     } catch (err) {
-      socket.emit("operation_failed", {
-        type: "chat",
-        message: "Qualcosa è andato storto, riprova tra poco.",
-      });
+      console.error("Errore irreversibile:", err);
+      socket.emit("operation_failed", { type: "chat", message: "Errore..." });
     }
   });
   socket.on("message_sent", async (message_id, user_id, group_id) => {

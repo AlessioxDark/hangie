@@ -54,8 +54,8 @@ export const SocketProvider = ({ children }) => {
     currentGroupDataRef.current = currentGroupData;
   }, [currentGroupData]);
 
-  const SERVER_URL = "https://hangie-web.onrender.com/";
-  // const SERVER_URL = "http://localhost:3000/";
+  // const SERVER_URL = "https://hangie-web.onrender.com/";
+  const SERVER_URL = "http://localhost:3000/";
   useEffect(() => {
     if (!session?.user?.id || currentScreen !== "xs") {
       return;
@@ -71,18 +71,20 @@ export const SocketProvider = ({ children }) => {
       const targetGroupId = String(data.group_id);
 
       const finalMessage = {
-        message_id: data.message_id, // ID definitivo del Database
+        message_id: data.message_id, // L'ID definitivo di Supabase
         content: data.message,
         group_id: data.group_id,
         user_id: data.sender_id,
         sent_at: Date.now(),
         isUser: isMe,
-        isSent: true, // Ora è confermato dal server
+        isSent: true,
         isRead: false,
         utenti: data.sender,
+        isOptimistic: false,
+        local_id: null, // Puliamo il local_id perché ormai è sul DB
       };
 
-      // 1. Aggiorna la lista dei gruppi (Sidebar)
+      // 1. Sidebar dei gruppi
       setGroupsData((prev) =>
         prev.map((g) =>
           String(g.group_id) === targetGroupId
@@ -95,29 +97,33 @@ export const SocketProvider = ({ children }) => {
         ),
       );
 
-      // 2. Aggiorna la chat corrente con riconciliazione
+      // 2. Chat attiva corrente
       if (String(currentGroup) === targetGroupId) {
+        console.log("sono io, ho il local_id e", isMe, data.local_id);
         setCurrentChatData((prevData) => {
           if (!prevData) return prevData;
 
-          // Se l'ho inviato io, rimpiazzo il messaggio ottimistico usando il tempMessageId
-          if (isMe && data.tempMessageId) {
-            const messageExists = prevData.messaggi.some(
-              (m) => m.message_id === data.message_id,
+          // Se il messaggio l'ho inviato io, cerco per local_id per piallare la versione ottimistica
+          if (isMe && data.local_id) {
+            const localExists = prevData.messaggi.some(
+              (m) => m.local_id === data.local_id,
             );
-            if (messageExists) return prevData; // Evita duplicati se l'evento è già stato processato
+            console.log("sono io, ho il local_id e", localExists);
 
-            return {
-              ...prevData,
-              messaggi: prevData.messaggi.map((m) =>
-                m.message_id === data.tempMessageId ? finalMessage : m,
-              ),
-            };
+            if (localExists) {
+              return {
+                ...prevData,
+                messaggi: prevData.messaggi.map((m) =>
+                  m.local_id === data.local_id ? finalMessage : m,
+                ),
+              };
+            }
           }
 
-          // Se lo ha inviato un altro utente, lo appendiamo normalmente (evitando duplicati)
-          if (prevData.messaggi.some((m) => m.message_id === data.message_id))
+          // Se non è mio (o se per qualche motivo il local_id non è passato), controllo il classico anti-duplicato per message_id
+          if (prevData.messaggi.some((m) => m.message_id === data.message_id)) {
             return prevData;
+          }
 
           return {
             ...prevData,
@@ -126,21 +132,28 @@ export const SocketProvider = ({ children }) => {
         });
       }
 
-      // 3. Aggiorna la mappa globale dei messaggi
+      // 3. Mappa globale dei messaggi (Stessa identica logica di riconciliazione)
       setMessagesMap((messMap) => {
         const groupMessages = messMap[data.group_id] || [];
 
-        if (isMe && data.tempMessageId) {
-          return {
-            ...messMap,
-            [data.group_id]: groupMessages.map((m) =>
-              m.message_id === data.tempMessageId ? finalMessage : m,
-            ),
-          };
+        if (isMe && data.local_id) {
+          const localExists = groupMessages.some(
+            (m) => m.local_id === data.local_id,
+          );
+          if (localExists) {
+            return {
+              ...messMap,
+              [data.group_id]: groupMessages.map((m) =>
+                m.local_id === data.local_id ? finalMessage : m,
+              ),
+            };
+          }
         }
 
-        if (groupMessages.some((m) => m.message_id === data.message_id))
+        if (groupMessages.some((m) => m.message_id === data.message_id)) {
           return messMap;
+        }
+
         return {
           ...messMap,
           [data.group_id]: [...groupMessages, finalMessage],
@@ -161,40 +174,55 @@ export const SocketProvider = ({ children }) => {
     socket.on("message_arrived", (data) => {
       const targetGroupId = String(data.group_id);
 
+      // 1. Aggiorna la mappa globale
       setMessagesMap((messMap) => {
-        const groupMessages = messMap[data.group_id];
-        if (!groupMessages) return messMap;
+        const groupMessages = messMap[data.group_id] || [];
 
-        // Ottimizzazione: se il messaggio è già segnato come inviato, evita il map
-        const targetMsg = groupMessages.find(
-          (m) => m.message_id === data.message_id,
-        );
-        if (targetMsg?.isSent) return messMap;
+        // Creiamo una mappa univoca per ID: impedisce i duplicati alla radice
+        const messageMap = new Map(groupMessages.map((m) => [m.message_id, m]));
+
+        if (messageMap.has(data.message_id)) {
+          const existing = messageMap.get(data.message_id);
+          messageMap.set(data.message_id, { ...existing, isSent: true });
+        } else {
+          // Se l'evento del socket è più veloce di React, prepariamo già il record corretto
+          messageMap.set(data.message_id, {
+            message_id: data.message_id,
+            isSent: true,
+          });
+        }
 
         return {
           ...messMap,
-          [data.group_id]: groupMessages.map((mess) =>
-            mess.message_id === data.message_id
-              ? { ...mess, isSent: true }
-              : mess,
-          ),
+          [data.group_id]: Array.from(messageMap.values()),
         };
       });
 
+      // 2. Aggiorna la chat corrente
       if (String(currentGroup) === targetGroupId) {
         setCurrentChatData((prevData) => {
-          if (!prevData) return prevData;
+          if (!prevData || !prevData.messaggi) return prevData;
 
-          const hasUnsentTarget = prevData.messaggi.some(
-            (m) => m.message_id === data.message_id && !m.isSent,
+          // 🚀 BLINDATURA: Usiamo la Map ed eliminiamo il vecchio controllo "if (!hasUnsentTarget)"
+          const messageMap = new Map(
+            prevData.messaggi.map((m) => [m.message_id, m]),
           );
-          if (!hasUnsentTarget) return prevData; // Evita re-render se è già true
+
+          if (messageMap.has(data.message_id)) {
+            const existing = messageMap.get(data.message_id);
+            messageMap.set(data.message_id, { ...existing, isSent: true });
+          } else {
+            // Se React non ha ancora renderizzato il messaggio ottimistico di sendMessage,
+            // creiamo un segnaposto temporaneo che verrà fuso un millisecondo dopo
+            messageMap.set(data.message_id, {
+              message_id: data.message_id,
+              isSent: true,
+            });
+          }
 
           return {
             ...prevData,
-            messaggi: prevData.messaggi.map((m) =>
-              m.message_id === data.message_id ? { ...m, isSent: true } : m,
-            ),
+            messaggi: Array.from(messageMap.values()),
           };
         });
       }

@@ -32,32 +32,32 @@ const Chats = () => {
     if (!trimmedInput) return;
 
     // Generiamo un ID temporaneo locale per evitare duplicati nella chiave React
-    const tempMessageId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const clientUUID = crypto.randomUUID(); // Generiamo l'identificativo unico del client
 
     const optimisticMessage = {
-      message_id: tempMessageId,
-      content: trimmedInput,
-      group_id: currentGroupData.group_id,
+      message_id: clientUUID, // Usato come chiave temporanea per React
+      local_id: clientUUID, // 🚀 FONDAMENTALE: Dice al ricevitore chi era il padre ottimistico
+      content: chatInput.trim(),
+      group_id: currentGroup,
       user_id: session.user.id,
       sent_at: Date.now(),
       isUser: true,
-      isSent: false, // Mostra l'icona di caricamento (ancora non arrivato al server)
+      isSent: false, // Ancora in caricamento (spunta singola orologio)
       isRead: false,
-      utenti: {
-        user_id: session.user.id,
-        // Passa qui l'avatar dell'utente corrente memorizzato nella sessione
-        profile_pic: session.user.user_metadata?.profile_pic || null,
-      },
-      isOptimistic: true, // Flag utile per gestire la grafica
+      utenti: { user_id: session.user.id, profile_pic: null }, // Struttura utente minima
+      isOptimistic: true, // Contrassegno
     };
 
-    setCurrentChatData((prevData) => {
-      if (!prevData) return prevData;
+    // Lo appendi subito alla chat corrente per dare reattività immediata
+    setCurrentChatData((prev) => {
+      if (!prev) return prev;
       return {
-        ...prevData,
-        messaggi: [...prevData.messaggi, optimisticMessage],
+        ...prev,
+        messaggi: [...prev.messaggi, optimisticMessage],
       };
     });
+
+    // Al server inviamo il local_id dentro i dati del gruppo o dell'evento
 
     // ── 2. AGGIORNA SUBITO L'ANTEPRIMA NELLA SIDEBAR (Istantaneo) ──
     setGroupsData((prev) =>
@@ -73,19 +73,17 @@ const Chats = () => {
     );
 
     // ── 3. INVIA AL SERVER PASSANDO ANCHE L'ID TEMPORANEO ──
+    // ── 3. INVIA AL SERVER PASSANDO I PARAMETRI ESSENZIALI ──
     currentSocket.emit(
       "send_message",
       trimmedInput,
       currentGroupData.group_id,
       session.access_token,
-      {
-        group_cover_img: currentGroupData.group_cover_img,
-        nome: currentGroupData.nome,
-        tempMessageId, // <-- CRITICO: invialo al backend per la riconciliazione
-      },
+      clientUUID, // 🚀 Spostato a quarto parametro! Rimosso currentGroupData
     );
 
     setChatInput("");
+
     if (chatInputRef.current) chatInputRef.current.textContent = "";
   };
 

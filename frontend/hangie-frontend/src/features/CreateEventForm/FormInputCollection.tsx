@@ -3,6 +3,7 @@ import FormInput from "./FormInput";
 import FormTextarea from "./FormTextarea";
 import ImageInput from "./ImageInput";
 import { useScreen } from "@/contexts/ScreenContext";
+import LocationAutocomplete from "../events/LocationAutocomplete";
 
 const FormInputCollection = ({
   register,
@@ -12,6 +13,7 @@ const FormInputCollection = ({
   images,
   setImages,
   currentStep,
+  methods,
 }) => {
   const { currentScreen } = useScreen();
   const renderCurrentStep = () => {
@@ -90,7 +92,7 @@ const FormInputCollection = ({
                   register={register}
                   error={errors.nome_luogo}
                 />
-                <FormInput
+                {/* <FormInput
                   id="indirizzo"
                   label="Indirizzo / Luogo"
                   placeholder="Via Roma, 12, 00100 Roma"
@@ -113,7 +115,31 @@ const FormInputCollection = ({
                   type="text"
                   register={register}
                   error={errors.cap}
-                />
+                /> */}
+
+                {currentStep === 3 && (
+                  <div className="flex flex-col gap-3">
+                    {/* <FormInput
+                      id="nome_luogo"
+                      label="Nome Personalizzato del Luogo"
+                      placeholder="Es: Terrazza di Marco, Pub da Gianluca"
+                      type="text"
+                      register={register}
+                      error={errors.nome_luogo}
+                    /> */}
+
+                    <LocationAutocomplete
+                      error={errors.locationData}
+                      onLocationSelect={(data) => {
+                        // Registriamo manualmente l'oggetto nel form di react-hook-form
+                        methods.setValue("locationData", data, {
+                          shouldValidate: true,
+                        });
+                        methods.trigger("locationData"); // Rimuove l'errore in tempo reale
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               {errors.root && (
                 <p className="text-sm font-body  text-red-500 ">

@@ -22,50 +22,45 @@ import { useMobileLayout } from "@/contexts/MobileLayoutChatContext.js";
 
 const EventSchema = z
   .object({
-    titolo: z.string().min(1, "il titolo è obbligatorio"),
+    titolo: z.string().min(1, "Il titolo è obbligatorio"),
     descrizione: z
       .string()
-      .min(1, "la descrizione è obbligatoria")
-      .min(30, "la descrizione deve essere minimo 30 caratteri")
-      .max(350, "La descrizione può essere massimo 350 caratteri"),
+      .min(1, "La descrizione è obbligatoria")
+      .min(30, "Minimo 30 caratteri"),
     data: z
       .string()
-      .min(1, "La data dell'evento è obbligatoria")
-      .pipe(z.coerce.date()) // Trasforma la stringa (data HTML) in Date object
-      .refine((date) => date > new Date(), {
-        message: "La data dell'evento deve essere futura.",
-      }),
+      .min(1, "Obbligatoria")
+      .pipe(z.coerce.date())
+      .refine((d) => d > new Date(), "Deve essere futura"),
     data_scadenza: z
       .string()
-      .min(1, "La data di scadenza è obbligatoria")
-      .pipe(z.coerce.date()) // Trasforma la stringa (data HTML) in Date object
-      .refine((date) => date > new Date(), {
-        message: "La data di scadenza deve essere futura.",
-      }),
-    indirizzo: z.string().min(1, "l'indirizzo è obbligatorio"),
+      .min(1, "Obbligatoria")
+      .pipe(z.coerce.date())
+      .refine((d) => d > new Date(), "Deve essere futura"),
     costo: z
-      .any() // Accettiamo inizialmente qualsiasi cosa (stringa vuota o numero)
-      .refine((val) => val !== "" && val !== undefined && val !== null, {
-        message: "Il costo è obbligatorio",
+      .any()
+      .transform((val) => Number(val))
+      .refine((val) => !isNaN(val) && val >= 0, "Numero valido"),
+
+    nome_luogo: z.string().min(1, "È obbligatorio dare un nome al luogo"),
+
+    // Gestione pulita dell'oggetto custom per evitare l'errore "undefined"
+    // Nel tuo file dello schema Zod
+    locationData: z
+      .object({
+        place_id: z.string(),
+        indirizzo: z.string(),
+        citta: z.string(),
+        cap: z.string(),
+        latitude: z.number(), // 👈 Cambiato in latitude (con la 'e')
+        longitude: z.number(), // 👈 Cambiato in longitude (con la 'e')
       })
-      .transform((val) => Number(val)) // Convertiamo in numero
-      .refine((val) => !isNaN(val), {
-        message: "Deve essere un numero valido",
-      })
-      .refine((val) => val >= 0, {
-        message: "Non può essere negativo",
-      })
-      .refine((val) => val === 0 || val >= 1, {
-        message: "Minimo 1€ (o 0 per gratis)",
+      .optional()
+      .refine((val) => val !== undefined, {
+        message: "Seleziona un indirizzo valido dai suggerimenti della tendina",
       }),
-    cap: z
-      .string()
-      .min(5, "il cap deve essere composto da 5 cifre")
-      .max(5, "il cap deve essere composto da 5 numeri"),
-    citta: z.string().min(1, "La città e obbligatoria"),
-    nome_luogo: z.string().min(1, "è obbligatorio dare un nome al luogo"),
   })
-  // 3. REGOLA COMPOSITA: Confronta data evento e scadenza
+  // 👈 I controlli globali che confrontano più campi vanno messi QUI, alla fine di tutto l'oggetto!
   .refine((data) => data.data > data.data_scadenza, {
     message:
       "La data dell'evento deve essere successiva alla scadenza iscrizione.",
@@ -202,6 +197,7 @@ const CreateEventForm = () => {
     const fieldsByStep = {
       1: ["titolo", "descrizione"],
       2: ["data", "data_scadenza", "costo"],
+      3: ["nome_luogo", "locationData"], // Compreso il submit finale
     };
     if (currentStep == 1) {
       const imageErr = checkImagesError();
@@ -269,6 +265,7 @@ const CreateEventForm = () => {
         {/* Area Contenuto del Form (Scorrevole) */}
         <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
           <FormInputCollection
+            methods={methods}
             register={register}
             errors={errors}
             imageError={imageError}

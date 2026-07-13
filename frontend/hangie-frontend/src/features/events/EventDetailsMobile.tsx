@@ -49,16 +49,7 @@ const EventDetailsMobile = () => {
   useEffect(() => {
     fetchEvent();
   }, [eventId]);
-
-  // Fix: Controllo di sicurezza robusto sullo stato vuoto
-  if (!currentEventData || Object.keys(currentEventData).length === 0) {
-    return <RenderLoadingState type={"event"} />;
-  }
-
-  if (error?.event) {
-    return <RenderErrorState reloadFunction={fetchEvent} type={"event"} />;
-  }
-
+  console.log(currentEventData);
   const {
     titolo,
     descrizione,
@@ -85,10 +76,10 @@ const EventDetailsMobile = () => {
   const acceptedParticipants =
     risposte_evento?.filter((r) => r.status === "accepted") || [];
 
-  const allImgs = [cover_img, ...event_imgs?.map((e) => e.img_url)].filter(
-    Boolean,
-  );
-
+  const allImgs = [
+    cover_img,
+    ...(event_imgs?.map((e) => e.img_url) || []),
+  ].filter(Boolean);
   const handleScroll = (e) => {
     const container = e.currentTarget;
     const scrollPosition = container.scrollLeft;
@@ -182,6 +173,18 @@ const EventDetailsMobile = () => {
     );
     setCurrentEventData((prev) => ({ ...prev, status: newStatus }));
   };
+  // Fix: Controllo di sicurezza robusto sullo stato vuoto
+  if (
+    !currentEventData ||
+    Object.keys(currentEventData).length === 0 ||
+    loading?.event
+  ) {
+    return <RenderLoadingState type={"event"} />;
+  }
+
+  if (error?.event) {
+    return <RenderErrorState reloadFunction={fetchEvent} type={"event"} />;
+  }
 
   return (
     <div className="pb-24">

@@ -69,6 +69,7 @@ const Home = () => {
       }
 
       if (type == "pending") {
+        console.log(homeEventsData.pending);
         return (
           <div>
             {homeEventsData.pending.length > 0 ? (

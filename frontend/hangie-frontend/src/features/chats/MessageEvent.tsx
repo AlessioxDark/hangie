@@ -70,7 +70,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
   return (
     <Link
       to={`/events/${event_details.event_id}`}
-      className="block min-w-[320px] max-w-[350px]"
+      className="block max-w-[320px]"
     >
       <div
         onClick={() => {

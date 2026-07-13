@@ -10,7 +10,6 @@ const groupRoutes = require("./routes/groupRoutes");
 const authRoutes = require("./routes/authRoutes");
 const friendsRoutes = require("./routes/friendsRoutes");
 const profileRoutes = require("./routes/profileRoutes");
-const placesRoutes = require("./routes/placesRoutes");
 const socketHandler = require("./config/socket/socketHandler"); // Importa il nuovo handler
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
@@ -38,7 +37,6 @@ app.use(
 app.use(express.json());
 app.use("/api/events", eventRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/places", placesRoutes);
 app.use("/api/groups", groupRoutes); // Assuming groupRoutes is defined similarly
 app.get("/", (req, res) => {
   res.send("<h1>tutto funziona</h1>");
@@ -46,5 +44,4 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/friends", friendsRoutes);
 
-server.listen(port, () => {
-});
+server.listen(port, () => {});

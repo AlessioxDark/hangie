@@ -1,41 +1,5 @@
 const supabase = require("../config/db");
 
-const getCoords = async ({ indirizzo, citta, cap }) => {
-  const queryCompleta = `${indirizzo}, ${cap} ${citta}, Italia`;
-  const queryCodificata = encodeURIComponent(queryCompleta);
-  const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${queryCodificata}&format=json&limit=1`;
-  try {
-    const response = await fetch(nominatimUrl);
-
-    if (!response.ok) {
-      throw { data: null, error: "Impossibile effettuare chiamata api" };
-    }
-
-    // 5. Parsa il corpo della risposta come JSON
-    const data = await response.json();
-
-    // 6. Elabora il risultato
-
-    if (data.length > 0) {
-      // L'API restituisce un array, prendiamo il primo risultato
-      const primoRisultato = data[0];
-
-      // Le coordinate sono presenti come stringhe, le convertiamo in numeri
-      const latitudine = parseFloat(primoRisultato.lat);
-      const longitudine = parseFloat(primoRisultato.lon);
-
-      return { latitudine, longitudine, error: null };
-    } else {
-      throw {
-        message: "Non esiste nessun luogo con quell'indirizzo",
-        details: "l'array è vuoto",
-      };
-    }
-  } catch (err) {
-    return { data: null, error: err };
-  }
-};
-
 const getAll = async (req) => {
   try {
     const EVENTSINPAGE = 12;
@@ -191,18 +155,17 @@ const getEvent = async (req) => {
     const { data: eventParticipants, error: eventParticipantsError } =
       await supabase
         .from("risposte_eventi")
-        .select("status,utente:utenti(*),eventi(*),created_at,is_creator")
-        .eq("eventi.event_id", event_id);
+        .select("status, utente:utenti(*), created_at, is_creator") // Rimosso eventi(*) se non ti serve nel return
+        .eq("event_id", event_id); // Filtro diretto sulla tabella principale
+
     if (eventParticipantsError) throw eventParticipantsError;
 
-    const newRisposte = eventParticipants.map((risposta) => {
-      return {
-        utenti: risposta.utente,
-        status: risposta.status,
-        created_at: risposta.created_at,
-        is_creator: risposta.is_creator,
-      };
-    });
+    const newRisposte = eventParticipants.map((risposta) => ({
+      utenti: risposta.utente,
+      status: risposta.status,
+      created_at: risposta.created_at,
+      is_creator: risposta.is_creator,
+    }));
 
     const finalData = {
       ...eventData,
@@ -219,50 +182,53 @@ const getEvent = async (req) => {
 };
 
 const getOrCreateLuogo = async (realBody) => {
-  const {
-    latitudine,
-    longitudine,
-    error: errorCoords,
-  } = await getCoords(realBody);
-  if (errorCoords) throw errorCoords;
+  const { nome_luogo, locationData } = realBody;
+
+  if (!locationData || !locationData.place_id) {
+    return {
+      data: null,
+      error: { message: "Dati geografici del luogo mancanti o non validi." },
+    };
+  }
 
   const { data: luogo, error } = await supabase
     .from("luoghi")
-    .select("luogo_id")
-    .match({ longitudine, latitudine })
-    .maybeSingle(); // Più pulito di .single() se può non esistere
-  if (error) throw error;
-  if (luogo) return luogo.luogo_id;
-
-  const { cap, indirizzo, citta } = realBody;
-  const { data: nuovoLuogo, error: insertError } = await supabase
-    .from("luoghi")
-    .insert([
+    .upsert(
       {
-        cap,
-        indirizzo,
-        citta,
-        nome: realBody.nome_luogo,
-        latitudine,
-        longitudine,
+        place_id: locationData.place_id,
+        nome: nome_luogo,
+        indirizzo: locationData.indirizzo,
+        citta: locationData.citta,
+        cap: locationData.cap,
+        lat: locationData.latitude, // 👈 Prende .latitude aggiornato
+        lon: locationData.longitude, // 👈 Prende .longitude aggiornato
       },
-    ])
+      { onConflict: "place_id" },
+    )
     .select("luogo_id")
     .single();
 
-  if (insertError) throw insertError;
-  return nuovoLuogo.luogo_id;
+  if (error) return { data: null, error };
+  return { data: luogo.luogo_id, error: null };
 };
 const newEvent = async (req) => {
   try {
     const user = req.user;
-
     if (!req.body || !req.body.data)
       throw { message: "Dati evento mancanti o malformati" };
-    const { images, ...realBody } = req.body.data;
+    const { images, locationData, nome_luogo, ...realBody } = req.body.data;
+
+    // 🌟 FIX 1: Estraiamo "data" e lo ridenominiamo in "luogoId" per allinearlo al return di getOrCreateLuogo
+    const { data: luogoId, error: luogoError } = await getOrCreateLuogo({
+      nome_luogo,
+      locationData,
+    });
+    if (luogoError) throw luogoError;
+
+    console.log("luogoId ottenuto:", luogoId);
+
     const group_id = realBody.group_id;
-    const luogoId = await getOrCreateLuogo(realBody);
-    const { cap, indirizzo, nome_luogo, citta, ...eventBody } = realBody;
+    const { ...eventBody } = realBody;
     const { data: eventData, error: eventError } = await supabase
       .from("eventi")
       .insert([{ ...eventBody, luogo_id: luogoId, created_by: user.id }])
@@ -347,6 +313,7 @@ const newEvent = async (req) => {
       error: null,
     };
   } catch (err) {
+    console.log("errore ne", err);
     return { data: null, error: err };
   }
 };
@@ -419,7 +386,6 @@ const getSuspended = async (req) => {
       eventi!inner(*)
     `,
         )
-        // Usa .filter con l'operatore 'in' e formatta l'array come stringa (id1,id2,id3)
         .filter("eventi.event_id", "in", `(${eventIds.join(",")})`);
 
     if (eventParticipantsError) throw eventParticipantsError;

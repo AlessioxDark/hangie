@@ -36,16 +36,8 @@ const EventCard = ({ event }) => {
       })
     : "";
 
-  const { openModal } = useModal();
-  const { currentScreen } = useScreen();
-  const { setCurrentEventData } = useChat();
-  const location = useLocation();
   return (
-    <Link
-      to={`/events/${event_id}`}
-      onClick={() => setCurrentEventData(event)}
-      className="block focus:outline-none"
-    >
+    <Link to={`/events/${event_id}`} className="block focus:outline-none">
       <article
         className="
       flex flex-col bg-bg-1 border border-neutral-300/60 rounded-xl overflow-hidden relative shadow-sm

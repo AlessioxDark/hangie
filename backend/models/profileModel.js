@@ -274,112 +274,165 @@ const getData = async (req) => {
     return { data: null, error: err.message };
   }
 };
+// const deleteGuest = async (req) => {
+//   try {
+//     const user = req.user;
+//     const { data: userEventAnswers, error: userEventAnswersError } =
+//       await supabase
+//         .from("risposte_eventi")
+//         .select("event_id")
+//         .eq("user_id", user.id);
+//     console.log("userEventAsnwerrs", userEventAnswersError);
+//     if (userEventAnswersError) throw userEventAnswersError;
+
+//     const EventAnswersIds = userEventAnswers.map((e) => e.event_id);
+//     const { error: EventAnswersError } = await supabase
+//       .from("risposte_eventi")
+//       .delete()
+//       .in("event_id", EventAnswersIds);
+//     console.log("EventAnswersError", EventAnswersError);
+
+//     if (EventAnswersError) throw EventAnswersError;
+
+//     const { data: participantsData, error: participantsError } = await supabase
+//       .from("partecipanti_gruppo")
+//       .select("group_id")
+//       .in("partecipante_id", [...initialFriends, user.id]);
+//     console.log("participantsData", participantsData);
+
+//     if (participantsError) throw participantsError;
+//     const groupIds = participantsData.map((g) => g.group_id);
+
+//     const { error: participantsDeleteError } = await supabase
+//       .from("partecipanti_gruppo")
+//       .delete()
+//       .in("group_id", groupIds);
+//     console.log("participantsDeleteError", participantsDeleteError);
+//     if (participantsDeleteError) throw participantsDeleteError;
+//     const { error: notificanError } = await supabase
+//       .from("notifiche")
+//       .delete()
+//       .in("group_id", groupIds)
+//       .in("user_id", [...initialFriends, user.id]);
+//     console.log("notificanError", notificanError);
+//     if (notificanError) throw notificanError;
+//     const { data: messagesData, error: messagesSelectError } = await supabase
+//       .from("messaggi")
+//       .select("message_id")
+//       .in("group_id", groupIds);
+//     console.log("messagesData", messagesData);
+//     if (messagesSelectError) throw messagesSelectError;
+//     const messageIds = messagesData.map((m) => m.message_id);
+
+//     const { error: messageStatusesError } = await supabase
+//       .from("messaggi_status")
+//       .delete()
+//       .in("message_id", messageIds);
+//     console.log("messageStatusesError", messageStatusesError);
+//     if (messageStatusesError) throw messageStatusesError;
+//     const { error: messagesError } = await supabase
+//       .from("messaggi")
+//       .delete()
+//       .in("message_id", messageIds);
+//     console.log("messagesError", messagesError);
+//     if (messagesError) throw messagesError;
+//     const { error: groupEventsError } = await supabase
+//       .from("eventi_gruppo")
+//       .delete()
+//       .in("group_id", groupIds)
+//       .in("event_id", EventAnswersIds);
+//     console.log("groupEventsError", groupEventsError);
+//     if (groupEventsError) throw groupEventsError;
+
+//     const { error: eventImgsError } = await supabase
+//       .from("event_imgs")
+//       .delete()
+//       .in("event_id", EventAnswersIds);
+//     console.log("eventImgsError", eventImgsError);
+//     if (eventImgsError) throw eventImgsError;
+
+//     const { error: eventsError } = await supabase
+//       .from("eventi")
+//       .delete()
+//       .in("group_id", groupIds);
+//     console.log("eventsError", eventsError);
+//     if (eventsError) throw eventsError;
+//     const { error: groupsError } = await supabase
+//       .from("gruppi")
+//       .delete()
+//       .in("group_id", groupIds);
+//     console.log("groupsError", groupsError);
+//     if (groupsError) throw groupsError;
+//     const { error: amicizieError } = await supabase
+//       .from("amicizie")
+//       .delete()
+//       .or(`user_id.eq.${user.id},amico_id.eq.${user.id}`);
+//     console.log("amicizieError", amicizieError);
+//     if (amicizieError) throw amicizieError;
+//     const { error: userDeleteError } = await supabase
+//       .from("utenti")
+//       .delete()
+//       .eq("user_id", user.id);
+//     console.log("userDeleteError", userDeleteError);
+//     if (userDeleteError) throw userDeleteError;
+//     console.log("finito");
+
+//     return { data: { success: true }, error: null };
+//   } catch (err) {
+//     return { data: null, error: err.message };
+//   }
+// };
+
 const deleteGuest = async (req) => {
   try {
-    console.log("ok");
     const user = req.user;
-    const { data: userEventAnswers, error: userEventAnswersError } =
-      await supabase
-        .from("risposte_eventi")
-        .select("event_id")
-        .eq("user_id", user.id);
-    console.log("userEventAsnwerrs", userEventAnswersError);
-    if (userEventAnswersError) throw userEventAnswersError;
 
-    const EventAnswersIds = userEventAnswers.map((e) => e.event_id);
-    const { error: EventAnswersError } = await supabase
-      .from("risposte_eventi")
-      .delete()
-      .in("event_id", EventAnswersIds);
-    console.log("EventAnswersError", EventAnswersError);
-
-    if (EventAnswersError) throw EventAnswersError;
-
+    // 1. Identifichiamo i gruppi di test (esclusivi del guest e dei suoi finti amici)
     const { data: participantsData, error: participantsError } = await supabase
       .from("partecipanti_gruppo")
       .select("group_id")
       .in("partecipante_id", [...initialFriends, user.id]);
-    console.log("participantsData", participantsData);
 
     if (participantsError) throw participantsError;
     const groupIds = participantsData.map((g) => g.group_id);
 
-    const { error: participantsDeleteError } = await supabase
-      .from("partecipanti_gruppo")
-      .delete()
-      .in("group_id", groupIds);
-    console.log("participantsDeleteError", participantsDeleteError);
-    if (participantsDeleteError) throw participantsDeleteError;
-    const { error: notificanError } = await supabase
-      .from("notifiche")
-      .delete()
-      .in("group_id", groupIds)
-      .in("user_id", [...initialFriends, user.id]);
-    console.log("notificanError", notificanError);
-    if (notificanError) throw notificanError;
-    const { data: messagesData, error: messagesSelectError } = await supabase
-      .from("messaggi")
-      .select("message_id")
-      .in("group_id", groupIds);
-    console.log("messagesData", messagesData);
-    if (messagesSelectError) throw messagesSelectError;
-    const messageIds = messagesData.map((m) => m.message_id);
+    // 2. Eliminiamo i gruppi di test (il cascade del DB pulirà i relativi messaggi ed eventi interni)
+    if (groupIds.length > 0) {
+      const { error: groupsError } = await supabase
+        .from("gruppi")
+        .delete()
+        .in("group_id", groupIds);
 
-    const { error: messageStatusesError } = await supabase
-      .from("messaggi_status")
-      .delete()
-      .in("message_id", messageIds);
-    console.log("messageStatusesError", messageStatusesError);
-    if (messageStatusesError) throw messageStatusesError;
-    const { error: messagesError } = await supabase
-      .from("messaggi")
-      .delete()
-      .in("message_id", messageIds);
-    console.log("messagesError", messagesError);
-    if (messagesError) throw messagesError;
-    const { error: groupEventsError } = await supabase
-      .from("eventi_gruppo")
-      .delete()
-      .in("group_id", groupIds)
-      .in("event_id", EventAnswersIds);
-    console.log("groupEventsError", groupEventsError);
-    if (groupEventsError) throw groupEventsError;
+      if (groupsError) throw groupsError;
+    }
 
-    const { error: eventImgsError } = await supabase
-      .from("event_imgs")
-      .delete()
-      .in("event_id", EventAnswersIds);
-    console.log("eventImgsError", eventImgsError);
-    if (eventImgsError) throw eventImgsError;
-
-    const { error: eventsError } = await supabase
+    // 3. 🚀 AZIONE CHIRURGICA PER IL GUEST:
+    // Eliminiamo TUTTI gli eventi creati da questo guest, anche quelli che si trovano
+    // in gruppi reali (evitando che rimangano eventi orfani con creatore NULL).
+    const { error: guestEventsDeleteError } = await supabase
       .from("eventi")
       .delete()
-      .in("group_id", groupIds);
-    console.log("eventsError", eventsError);
-    if (eventsError) throw eventsError;
-    const { error: groupsError } = await supabase
-      .from("gruppi")
-      .delete()
-      .in("group_id", groupIds);
-    console.log("groupsError", groupsError);
-    if (groupsError) throw groupsError;
-    const { error: amicizieError } = await supabase
-      .from("amicizie")
-      .delete()
-      .or(`user_id.eq.${user.id},amico_id.eq.${user.id}`);
-    console.log("amicizieError", amicizieError);
-    if (amicizieError) throw amicizieError;
+      .eq("created_by", user.id); // Forza la cancellazione manuale prima del delete utente
+
+    if (guestEventsDeleteError) throw guestEventsDeleteError;
+
+    // 4. Eliminiamo i finti amici (initialFriends)
+    if (initialFriends && initialFriends.length > 0) {
+      await supabase.from("utenti").delete().in("user_id", initialFriends);
+    }
+
+    // 5. Infine, eliminiamo il Guest.
+    // Ora Postgres non protesterà più perché gli eventi legati al suo ID sono già stati polverizzati al punto 3.
     const { error: userDeleteError } = await supabase
       .from("utenti")
       .delete()
       .eq("user_id", user.id);
-    console.log("userDeleteError", userDeleteError);
+
     if (userDeleteError) throw userDeleteError;
-    console.log("finito");
 
     return { data: { success: true }, error: null };
   } catch (err) {
+    console.log("EEEEEE", err);
     return { data: null, error: err.message };
   }
 };

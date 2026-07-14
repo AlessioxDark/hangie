@@ -1,2 +1,0 @@
-troppo ritardo quando invio messaggi
-ricontrollare tutti i socket e aggiornamenti locali 

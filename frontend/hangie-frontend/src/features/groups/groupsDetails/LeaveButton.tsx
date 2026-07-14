@@ -8,18 +8,21 @@ import { useNavigate } from "react-router";
 
 const LeaveButton = () => {
   const { session } = useAuth();
-  const { currentGroup, setCurrentGroup } = useChat();
+  const { currentGroup, setCurrentGroup, setGroupsData, setHomeEventsData } =
+    useChat();
   const { currentSocket } = useSocket();
   const { executeApiCall } = useApi();
-
-  const navigate = useNavigate();
   const handleLeaveGroup = async () => {
-    const saveData = (data) => {
-      navigate("/chats");
-      setCurrentGroup(null);
-      currentSocket.emit("leave_group", currentGroup, session.user.id);
-    };
+    // Salviamo i riferimenti prima di azzerarli
+    const groupToLeave = currentGroup;
+    const myId = session?.user?.id;
 
+    if (!groupToLeave || !myId) return;
+
+    const saveData = () => {
+      // 🚀 1. Avvisiamo il server e gli altri utenti via Socket (Spara e fuggi)
+      currentSocket.emit("leave_group", groupToLeave, myId);
+    };
     executeApiCall(
       "leave_group",
       () => {

@@ -11,8 +11,6 @@ const getAllGroups = async (req, res) => {
         let ultimoMessaggio = null;
 
         for (const messaggio of row.gruppi.messaggi) {
-
-
           if (!ultimoMessaggio || messaggio.sent_at > ultimoMessaggio.sent_at) {
             if (messaggio.type === "event") {
               const { data: titoloData, error: titoloError } = await supabase
@@ -31,10 +29,8 @@ const getAllGroups = async (req, res) => {
                 };
               }
             } else {
-
               ultimoMessaggio = messaggio;
             }
-
           }
         }
         if (row.gruppi.messaggi.length == 0) {
@@ -48,13 +44,18 @@ const getAllGroups = async (req, res) => {
         };
       }),
     );
+    formattedData.sort((a, b) => {
+      const timeA = a.ultimoMessaggio ? new Date(a.ultimoMessaggio.sent_at) : 0;
+      const timeB = b.ultimoMessaggio ? new Date(b.ultimoMessaggio.sent_at) : 0;
+      return timeB - timeA;
+    });
+    console.log("formattd groups", formattedData);
     res.status(200).json({
       success: true,
       message: "Operazione completata con successo",
       data: formattedData,
     });
   } catch (err) {
-
     res.status(500).json({
       success: false,
       message: "Non siamo riusciti a trovare i tuoi gruppi",

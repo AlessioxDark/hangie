@@ -50,7 +50,9 @@ const ChatsSidebar = () => {
       </div>
 
       {/* Lista Scorrevole dei Gruppi/Chat */}
-      <div className="flex-1 overflow-y-auto min-h-0 ">{renderContent()}</div>
+      <div className="flex-1 overflow-y-scroll min-h-0 pb-10 ">
+        {renderContent()}
+      </div>
     </div>
   );
 };

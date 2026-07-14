@@ -187,7 +187,7 @@ const EventDetailsMobile = () => {
   }
 
   return (
-    <div className="pb-24">
+    <div className={`${created_by == session?.user.id ? "pb-40" : "pb-24"}`}>
       {" "}
       {/* Padding bottom per non coprire i pulsanti fixed */}
       <div className="px-2 py-3 bg-white z-[100] w-full flex flex-row items-center gap-4 border-b border-gray-200 sticky top-0">
@@ -371,62 +371,72 @@ const EventDetailsMobile = () => {
               </div>
             </div>
 
-            {created_by === session?.user?.id && (
-              <button
-                className="w-full py-4 text-white bg-red-500 font-semibold rounded-2xl active:bg-red-400 transition-all shadow-sm"
-                onClick={() =>
-                  handleDeleteEvent(eventId, sendSocketDeleteEvent)
-                }
-              >
-                Elimina Evento
-              </button>
-            )}
+            <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t border-gray-200 p-4 pb-5 z-[110] backdrop-blur-md shadow-lg flex flex-col gap-3">
+              {/* 👥 PULSANTI DI VOTO: Visibili a tutti (sia invitati che creatore) */}
+              <div className="w-full flex flex-row gap-3">
+                <button
+                  type="button"
+                  disabled={isExpired}
+                  onClick={() => {
+                    const newStatus =
+                      status === "accepted" ? "pending" : "accepted";
+                    handleEventDecision(eventId, { status: newStatus }, () =>
+                      sendSocketVoteEvent(newStatus),
+                    );
+                  }}
+                  className={`flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer ${
+                    status === "accepted"
+                      ? "bg-primary text-white shadow-md shadow-primary/20"
+                      : "bg-gray-100 text-gray-700"
+                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                >
+                  Accetta
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isExpired}
+                  onClick={() => {
+                    const newStatus =
+                      status === "rejected" ? "pending" : "rejected";
+                    handleEventDecision(eventId, { status: newStatus }, () =>
+                      sendSocketVoteEvent(newStatus),
+                    );
+                  }}
+                  className={`flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer ${
+                    status === "rejected"
+                      ? "bg-red-500 text-white shadow-md shadow-red-500/20"
+                      : "bg-gray-100 text-gray-700"
+                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                >
+                  Rifiuta
+                </button>
+              </div>
+
+              {/* 👑 PULSANTE ELIMINA: Spunta sotto solo se sei l'organizzatore */}
+              {created_by === session?.user?.id && (
+                <button
+                  className="w-full  h-10 text-white  bg-red-500 font-body font-bold text-xs rounded-xl active:bg-red-400 transition-all shadow-sm flex items-center justify-center cursor-pointer mt-1"
+                  onClick={() => {
+                    handleDeleteEvent(eventId, sendSocketDeleteEvent);
+                  }}
+                >
+                  Elimina Evento
+                </button>
+                // <button
+                //   type="button"
+                //   className="w-full h-10 text-red-500 bg-red-50 font-body font-bold text-xs rounded-xl active:scale-[0.98] transition-all border border-red-100 flex items-center justify-center cursor-pointer mt-1"
+                //   onClick={() =>
+                //     handleDeleteEvent(eventId, sendSocketDeleteEvent)
+                //   }
+                // >
+                //   Elimina Evento
+                // </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-      {created_by !== session?.user?.id && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t border-gray-200 p-4 pb-5 z-[110] backdrop-blur-md shadow-lg">
-          <div className="w-full flex flex-row gap-3">
-            <button
-              type="button"
-              disabled={isExpired}
-              onClick={() => {
-                const newStatus =
-                  status === "accepted" ? "pending" : "accepted";
-                handleEventDecision(eventId, { status: newStatus }, () =>
-                  sendSocketVoteEvent(newStatus),
-                );
-              }}
-              className={`flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer ${
-                status === "accepted"
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "bg-gray-100 text-gray-700"
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              Accetta
-            </button>
-
-            <button
-              type="button"
-              disabled={isExpired}
-              onClick={() => {
-                const newStatus =
-                  status === "rejected" ? "pending" : "rejected";
-                handleEventDecision(eventId, { status: newStatus }, () =>
-                  sendSocketVoteEvent(newStatus),
-                );
-              }}
-              className={`flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer ${
-                status === "rejected"
-                  ? "bg-red-500 text-white shadow-md shadow-red-500/20"
-                  : "bg-gray-100 text-gray-700"
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              Rifiuta
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

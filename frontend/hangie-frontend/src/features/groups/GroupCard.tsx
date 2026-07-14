@@ -35,8 +35,8 @@ const GroupCard = ({
   const { currentNotifications } = useNotification();
   const navigate = useNavigate();
   const displayImage = useMemo(() => {
-    // Usa il timestamp dell'ultimo aggiornamento o una stringa fissa
-    // Se updated_at non c'è, non mettere Date.now(), metti una stringa vuota o nulla
+    if (!group_cover_img) return null;
+
     const version = updated_at ? new Date(updated_at).getTime() : "1";
 
     return `${group_cover_img}?v=${version}`;
@@ -77,16 +77,17 @@ const GroupCard = ({
     >
       <div className="flex flex-row items-center w-full h-full gap-3">
         {/* Immagine Profilo Gruppo */}
-        {displayImage == null ? (
+        {displayImage ? (
+          <img
+            src={displayImage}
+            loading="eager"
+            className="rounded-full w-12 h-12 flex-shrink-0 object-cover"
+            alt="Avatar del gruppo"
+          />
+        ) : (
           <div className="rounded-full w-12 h-12 flex-shrink-0 bg-bg-2 overflow-hidden">
             <DefaultGroupIcon />
           </div>
-        ) : (
-          <img
-            src={displayImage}
-            className="rounded-full w-12 h-12 flex-shrink-0 object-cover"
-            alt="Group cover"
-          />
         )}
 
         {/* Dettagli della Chat */}

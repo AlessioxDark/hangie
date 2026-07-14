@@ -61,7 +61,11 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const socket = io(SERVER_URL);
+    const socket = io(SERVER_URL, {
+      transports: ["websocket"], // 🚀 Forza l'uso del WebSocket puro, disattiva il polling HTTP
+      upgrade: false, // Evita tentativi di upgrade intermedi
+      autoConnect: true,
+    });
     socket.on("connect", () => {
       socket.emit("identify_user", session.user.id);
       setCurrentSocket(socket);
@@ -85,17 +89,16 @@ export const SocketProvider = ({ children }) => {
       };
 
       // 1. Sidebar dei gruppi
-      setGroupsData((prev) =>
-        prev.map((g) =>
-          String(g.group_id) === targetGroupId
-            ? {
-                ...g,
-                ultimoMessaggio: finalMessage,
-                updated_at: new Date().toISOString(),
-              }
-            : g,
-        ),
-      );
+      setGroupsData((prev) => {
+        const messageToUpdate = prev.find(
+          (g) => String(g.group_id) === String(targetGroupId),
+        );
+        const filteredGroups = prev.filter((g) => g.group_id !== targetGroupId);
+        if (!messageToUpdate) return prev;
+        messageToUpdate.ultimoMessaggio = finalMessage;
+        messageToUpdate.updated_at = new Date().toISOString();
+        return [messageToUpdate, ...filteredGroups];
+      });
 
       // 2. Chat attiva corrente
       if (String(currentGroup) === targetGroupId) {
@@ -230,7 +233,6 @@ export const SocketProvider = ({ children }) => {
     socket.on("added_new_group", (groupId, data, participants, imgUrl) => {
       setGroupsData((prev) => {
         return [
-          ...prev,
           {
             group_id: groupId,
             group_cover_img: imgUrl,
@@ -238,68 +240,69 @@ export const SocketProvider = ({ children }) => {
             partecipanti_gruppo: participants,
             ultimoMessaggio: { sent_at: Date.now(), content: "" },
           },
+          ...prev,
         ];
       });
     });
 
     socket.on("left_group", (groupId, userId) => {
       const isMe = session.user.id == userId;
-      setGroupsData((prev) => {
-        // Usiamo MAP per creare un nuovo array, non forEach
+      if (isMe) {
+        setGroupsData((prev) => prev.filter((g) => g.group_id !== groupId));
 
-        if (!isMe) {
-          return prev.map((group) => {
-            if (group.group_id === groupId) {
-              const newParticipants = group.partecipanti_gruppo.filter(
-                (p) => (p.partecipante_id || p.user_id) !== userId,
-              );
-              return { ...group, partecipanti_gruppo: newParticipants };
-            }
-            return group;
-          });
-        } else {
-          return prev.filter((g) => {
-            return g.group_id !== groupId;
-          });
-        }
-      });
-      if (currentGroup && currentGroup == groupId) {
-        setCurrentGroupData((prev) => {
-          const newParticipants = prev.partecipanti_gruppo.filter(
-            (p) => (p.partecipante_id || p.user_id) !== userId, // Verifica se la chiave è user_id o partecipante_id
-          );
-
-          return { ...prev, partecipanti_gruppo: newParticipants };
-        });
-        if (!isMe) {
-          setCurrentChatData((prevChat) => {
-            const newMessaggi = prevChat.messaggi.map((m) => {
-              if (m.type == "event") {
-                const newRisposte = m.event_details.risposte_evento.filter(
-                  (r) => r.utenti.user_id !== userId,
-                );
-                return {
-                  ...m,
-                  event_details: {
-                    ...m.event_details,
-                    risposte_evento: newRisposte,
-                  },
-                };
-              }
-              return m;
-            });
-            return { ...prevChat, messaggi: newMessaggi };
-          });
+        // 🚀 3. Rimuoviamo gli eventi della home legati a quel gruppo
+        setHomeEventsData((prevEvents) => ({
+          pending: prevEvents.pending.filter((e) => e.group_id !== groupId),
+          accepted: prevEvents.accepted.filter((e) => e.group_id !== groupId),
+          rejected: prevEvents.rejected.filter((e) => e.group_id !== groupId),
+        }));
+        if (currentGroup == groupId) {
+          navigate("/chats");
+          setCurrentGroup(null);
         }
       }
 
-      if (isMe) {
-        setHomeEventsData((prevEvents) => {
-          return {
-            pending: prevEvents.pending.filter((e) => e.group_id !== groupId),
-            accepted: prevEvents.accepted.filter((e) => e.group_id !== groupId),
-            rejected: prevEvents.rejected.filter((e) => e.group_id !== groupId),
-          };
+      // 👥 SE È UN ALTRO UTENTE (Gli altri rimasti nel gruppo):
+      // Loro devono aggiornare la UI in tempo reale perché non sanno che sei uscito!
+      setGroupsData((prev) => {
+        return prev.map((group) => {
+          if (group.group_id === groupId) {
+            const newParticipants = group.partecipanti_gruppo.filter(
+              (p) => (p.partecipante_id || p.user_id) !== userId,
+            );
+            return { ...group, partecipanti_gruppo: newParticipants };
+          }
+          return group;
+        });
+      });
+
+      if (currentGroup && currentGroup == groupId) {
+        setCurrentGroupData((prev) => {
+          if (!prev) return prev;
+          const newParticipants = prev.partecipanti_gruppo.filter(
+            (p) => (p.partecipante_id || p.user_id) !== userId,
+          );
+          return { ...prev, partecipanti_gruppo: newParticipants };
+        });
+
+        setCurrentChatData((prevChat) => {
+          if (!prevChat || !prevChat.messaggi) return prevChat;
+          const newMessaggi = prevChat.messaggi.map((m) => {
+            if (m.type == "event" && m.event_details?.risposte_evento) {
+              const newRisposte = m.event_details.risposte_evento.filter(
+                (r) => r.utenti?.user_id !== userId,
+              );
+              return {
+                ...m,
+                event_details: {
+                  ...m.event_details,
+                  risposte_evento: newRisposte,
+                },
+              };
+            }
+            return m;
+          });
+          return { ...prevChat, messaggi: newMessaggi };
         });
       }
     });
@@ -474,20 +477,20 @@ export const SocketProvider = ({ children }) => {
           };
         });
       }
-      setGroupsData((prevData) => {
-        return prevData.map((g) => {
-          if (g.group_id == data.group_id) {
-            return {
-              ...g,
-              ultimoMessaggio: {
-                type: "event",
-                content: data.eventi.titolo,
-                sent_at: Date.now(),
-              },
-            };
-          }
-          return g;
-        });
+
+      setGroupsData((prev) => {
+        const messageToUpdate = prev.find(
+          (g) => String(g.group_id) === String(data.group_id),
+        );
+        const filteredGroups = prev.filter((g) => g.group_id !== data.group_id);
+        if (!messageToUpdate) return prev;
+        messageToUpdate.ultimoMessaggio = {
+          type: "event",
+          content: data.eventi.titolo,
+          sent_at: Date.now(),
+        };
+        messageToUpdate.updated_at = new Date().toISOString();
+        return [messageToUpdate, ...filteredGroups];
       });
     });
     socket.on("give_read_bulk", (data) => {
@@ -592,8 +595,6 @@ export const SocketProvider = ({ children }) => {
       }
     });
     socket.on("deleted_event", (data) => {
-      // notifica
-
       const { event_id, group_id } = data;
 
       if (currentPath == `/events/${event_id}`) {

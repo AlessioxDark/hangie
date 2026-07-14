@@ -60,17 +60,18 @@ const Chats = () => {
     // Al server inviamo il local_id dentro i dati del gruppo o dell'evento
 
     // ── 2. AGGIORNA SUBITO L'ANTEPRIMA NELLA SIDEBAR (Istantaneo) ──
-    setGroupsData((prev) =>
-      prev.map((g) =>
-        String(g.group_id) === String(currentGroupData.group_id)
-          ? {
-              ...g,
-              ultimoMessaggio: optimisticMessage,
-              updated_at: new Date().toISOString(),
-            }
-          : g,
-      ),
-    );
+    setGroupsData((prev) => {
+      const messageToUpdate = prev.find(
+        (g) => String(g.group_id) === String(currentGroupData.group_id),
+      );
+      const filteredGroups = prev.filter(
+        (g) => g.group_id !== currentGroupData.group_id,
+      );
+      if (!messageToUpdate) return prev;
+      messageToUpdate.ultimoMessaggio = optimisticMessage;
+      messageToUpdate.updated_at = new Date().toISOString();
+      return [messageToUpdate, ...filteredGroups];
+    });
 
     // ── 3. INVIA AL SERVER PASSANDO ANCHE L'ID TEMPORANEO ──
     // ── 3. INVIA AL SERVER PASSANDO I PARAMETRI ESSENZIALI ──

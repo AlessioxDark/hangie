@@ -133,7 +133,6 @@ const getEvents = async (req) => {
     if (eventsError) throw eventsError;
     const eventIds = eventsData.map((e) => e.eventi.event_id);
 
-
     const { data: risposte, error: risposteError } = await supabase
       .from("risposte_eventi")
       .select(
@@ -186,9 +185,10 @@ const getEvent = async (req) => {
 const newGroup = async (req) => {
   try {
     const user = req.user;
+    const { nome, descrizione, participants } = req.body;
     const { data: groupData, error: groupError } = await supabase
       .from("gruppi")
-      .insert([{ ...newBody, createdBy: user.id }])
+      .insert([{ nome, descrizione, createdBy: user.id }])
       .select("*")
       .single();
     if (groupError) throw groupError;
@@ -289,7 +289,6 @@ const leave = async (req) => {
     if (countError) throw countError;
 
     if (count == 0) {
-
       const { error: notificanError } = await supabase
         .from("notifiche")
         .delete()

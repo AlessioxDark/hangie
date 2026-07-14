@@ -242,6 +242,7 @@ const groupHandlers = (io, socket) => {
   });
   socket.on("leave_group", async (groupId, userId) => {
     try {
+      console.log("emit");
       const { data: participants, error: participantsError } = await supabase
         .from("partecipanti_gruppo")
         .select("*,user_id:partecipante_id")
@@ -257,6 +258,8 @@ const groupHandlers = (io, socket) => {
         io.to(userId).emit("left_group", groupId, userId);
       }
     } catch (err) {
+      console.log("errore socket", err);
+
       socket.emit("operation_failed", {
         type: "leave_group",
         message: "Qualcosa è andato storto, riprova tra poco.",

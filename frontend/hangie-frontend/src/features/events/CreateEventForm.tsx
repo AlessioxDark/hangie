@@ -5,10 +5,10 @@ import { useModal } from "@/contexts/ModalContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckIcon, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+// 1. Importa FormProvider da react-hook-form 🌟
+import { useForm, FormProvider } from "react-hook-form";
 import z from "zod";
 
-// Componente Textarea
 import { supabase } from "../../config/db.js";
 import FormInputCollection from "../CreateEventForm/FormInputCollection.js";
 import ChevronLeft from "@/assets/icons/ChevronLeft.tsx";
@@ -44,33 +44,30 @@ const EventSchema = z
 
     nome_luogo: z.string().min(1, "È obbligatorio dare un nome al luogo"),
 
-    // Gestione pulita dell'oggetto custom per evitare l'errore "undefined"
-    // Nel tuo file dello schema Zod
     locationData: z
       .object({
         place_id: z.string(),
         indirizzo: z.string(),
         citta: z.string(),
         cap: z.string(),
-        latitude: z.number(), // 👈 Cambiato in latitude (con la 'e')
-        longitude: z.number(), // 👈 Cambiato in longitude (con la 'e')
+        latitude: z.number(),
+        longitude: z.number(),
       })
       .optional()
       .refine((val) => val !== undefined, {
         message: "Seleziona un indirizzo valido dai suggerimenti della tendina",
       }),
   })
-  // 👈 I controlli globali che confrontano più campi vanno messi QUI, alla fine di tutto l'oggetto!
   .refine((data) => data.data > data.data_scadenza, {
     message:
       "La data dell'evento deve essere successiva alla scadenza iscrizione.",
     path: ["root"],
   });
+
 const CreateEventForm = () => {
   const IMAGE_LIMIT = 4;
   const { closeModal } = useModal();
   const { session } = useAuth();
-  // const { setCurrentChatData } = useChat();
   const { setMobileView } = useMobileLayout();
   const { currentSocket } = useSocket();
   const [images, setImages] = useState([]);
@@ -78,7 +75,7 @@ const CreateEventForm = () => {
   const methods = useForm({
     resolver: zodResolver(EventSchema),
     mode: "onChange",
-    shouldUnregister: false, // 🛡️ Mantiene vivi i dati nel registro anche se cambi step!
+    shouldUnregister: false, // Mantiene i dati degli step non visibili 🛡️
   });
 
   const {
@@ -89,16 +86,19 @@ const CreateEventForm = () => {
     setError,
     clearErrors,
   } = methods;
+
   useEffect(() => {
     console.log("📋 ERRORS CORRENTI:", errors);
     console.log("📋 VALUES CORRENTI:", methods.getValues());
   }, [errors]);
+
   const { currentGroup, currentGroupData } = useChat();
   const { error: errorsApi } = useApi();
   const { currentScreen } = useScreen();
   const { executeApiCall, loading } = useApi();
   const [currentStep, setCurrentStep] = useState(1);
-  const [imageError, setImageError] = useState(false); // Stato per l'errore
+  const [imageError, setImageError] = useState(false);
+
   const sendEvent = (event_id, event_details, message_details) => {
     currentSocket.emit(
       "send_event",
@@ -110,8 +110,10 @@ const CreateEventForm = () => {
   };
 
   const onSubmit = async (data) => {
-    console.log("✅ ONSUBMIT CHIAMATO CON:", data);
+    const formValues = methods.getValues();
+
     if (checkImagesError()) return;
+
     const handleUploadAndSocket = async (dataArrived) => {
       try {
         clearErrors("root");
@@ -135,6 +137,7 @@ const CreateEventForm = () => {
 
           return urlData.publicUrl;
         });
+
         const uploadedUrls = await Promise.all(uploadPromises);
         const cover_url = uploadedUrls[0];
         const { error: coverError } = await supabase
@@ -143,15 +146,19 @@ const CreateEventForm = () => {
           .eq("event_id", newEventId);
 
         if (coverError) throw coverError;
+
+        // Correzione bug: avevi .from("eventi").insert su event_imgs! È .from("event_imgs")
         const otherImages = uploadedUrls
           .filter((url) => url !== cover_url)
           .map((url) => ({ img_url: url, event_id: newEventId }));
+
         if (otherImages.length > 0) {
           const { error: imgError } = await supabase
-            .from("event_imgs")
+            .from("event_imgs") // 👈 Corretto qui
             .insert(otherImages);
           if (imgError) throw imgError;
         }
+
         const newEventDetails = {
           ...dataArrived.messageDetails.eventi,
           cover_img: cover_url,
@@ -169,10 +176,9 @@ const CreateEventForm = () => {
     executeApiCall(
       "add_event",
       () => {
-        console.log(data);
         return ApiCalls.addNewEvent(session.access_token, {
           data: {
-            ...data,
+            ...formValues, // 🚀 Usa formValues invece di data!
             group_id: currentGroup,
             images: images,
           },
@@ -183,7 +189,7 @@ const CreateEventForm = () => {
   };
 
   const checkImagesError = () => {
-    if (images.length == 0) {
+    if (images.length === 0) {
       setImageError({
         message: "inserisci almeno un'immagine",
       });
@@ -203,11 +209,10 @@ const CreateEventForm = () => {
     const fieldsByStep = {
       1: ["titolo", "descrizione"],
       2: ["data", "data_scadenza", "costo"],
-      3: ["nome_luogo", "locationData"], // Compreso il submit finale
+      3: ["nome_luogo", "locationData"],
     };
-    if (currentStep == 1) {
+    if (currentStep === 1) {
       const imageErr = checkImagesError();
-
       if (imageErr) return;
     }
     const result = await trigger(fieldsByStep[currentStep]);
@@ -224,6 +229,7 @@ const CreateEventForm = () => {
       setCurrentStep((lastStep) => lastStep + 1);
     }
   };
+
   const handleLastStepMobile = () => {
     if (currentStep >= 2) {
       setCurrentStep((lastStep) => lastStep - 1);
@@ -236,6 +242,7 @@ const CreateEventForm = () => {
     console.log("VALUES ATTUALI:", methods.getValues());
     console.log("ERRORS ATTUALI:", errors);
   }, [currentStep]);
+
   useEffect(() => {
     if (errorsApi?.add_event) {
       setError("root", {
@@ -243,7 +250,6 @@ const CreateEventForm = () => {
         details: errorsApi.add_event.details,
       });
     } else {
-      // Se non c'è più l'errore nell'API, pulisci il root nel form
       clearErrors("root");
     }
   }, [errorsApi?.add_event]);
@@ -251,60 +257,76 @@ const CreateEventForm = () => {
   if (loading.add_event) {
     return <RenderLoadingState type={"add_event"} />;
   }
+
   return (
-    <div className="w-full h-screen bg-bg-1 flex flex-col overflow-hidden relative">
-      <form className="flex flex-col h-full" onSubmit={handleSubmit(onSubmit)}>
-        {/* Header della Schermata */}
-        <div className="px-4 py-3 border-b border-bg-3/60 bg-bg-1 flex-shrink-0 flex justify-between items-center">
-          <div className="flex flex-row gap-2 items-center min-w-0">
-            <button
-              type="button"
-              onClick={handleLastStepMobile}
-              className="w-9 h-9 flex items-center justify-center rounded-full text-text-2 active:bg-bg-2 transition-colors cursor-pointer"
-              aria-label="Torna al passaggio precedente"
-            >
-              <ChevronLeft color="currentColor" />
-            </button>
-            <h1 className="text-text-1 font-title font-bold text-lg truncate">
-              Crea Evento
-            </h1>
-          </div>
-
-          {/* Indicatore del Passaggio Corrente (Stile Mobile Nativo) */}
-          <span className="text-xs font-body font-bold text-text-3 bg-bg-2 px-2.5 py-1 rounded-md">
-            Step {currentStep} di 3
-          </span>
-        </div>
-
-        {/* Area Contenuto del Form (Scorrevole) */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
-          <FormInputCollection
-            methods={methods}
-            register={register}
-            errors={errors}
-            imageError={imageError}
-            setImageError={setImageError}
-            images={images}
-            setImages={setImages}
-            currentStep={currentStep}
-          />
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-20 px-4 bg-bg-1/95 backdrop-blur-md border-t border-bg-3/40 flex items-center justify-center z-50">
-          <div className="fixed bottom-5 right-5 flex items-center justify-center font-body text-xs text-primary bg-primary p-3 rounded-full">
-            {currentStep <= 2 ? (
-              <div className="w-6 h-6" onClick={handleNextStepMobile}>
-                <ChevronRight color="#ffffff" />
-              </div>
-            ) : (
-              <button type="submit" className="w-6 h-6">
-                <CheckIcon color="#ffffff" />
+    // 2. Forniamo il FormProvider a tutta la struttura 🚀
+    <FormProvider {...methods}>
+      <div className="w-full h-screen bg-bg-1 flex flex-col overflow-hidden relative">
+        <form
+          className="flex flex-col h-full"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          {/* Header della Schermata */}
+          <div className="px-4 py-3 border-b border-bg-3/60 bg-bg-1 flex-shrink-0 flex justify-between items-center">
+            <div className="flex flex-row gap-2 items-center min-w-0">
+              <button
+                type="button"
+                onClick={handleLastStepMobile}
+                className="w-9 h-9 flex items-center justify-center rounded-full text-text-2 active:bg-bg-2 transition-colors cursor-pointer"
+                aria-label="Torna al passaggio precedente"
+              >
+                <ChevronLeft color="currentColor" />
               </button>
-            )}
+              <h1 className="text-text-1 font-title font-bold text-lg truncate">
+                Crea Evento
+              </h1>
+            </div>
+
+            {/* Indicatore del Passaggio Corrente */}
+            <span className="text-xs font-body font-bold text-text-3 bg-bg-2 px-2.5 py-1 rounded-md">
+              Step {currentStep} di 3
+            </span>
           </div>
-        </div>
-      </form>
-    </div>
+
+          {/* Area Contenuto del Form (Scorrevole) */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
+            <FormInputCollection
+              methods={methods}
+              register={register}
+              errors={errors}
+              imageError={imageError}
+              setImageError={setImageError}
+              images={images}
+              setImages={setImages}
+              currentStep={currentStep}
+            />
+          </div>
+
+          {/* Sezione Pulsanti in Basso */}
+          <div className="absolute bottom-0 left-0 right-0 h-20 px-4 bg-bg-1/95 backdrop-blur-md border-t border-bg-3/40 flex items-center justify-center z-50">
+            <div className="fixed bottom-5 right-5 flex items-center justify-center font-body text-xs text-primary bg-primary p-3 rounded-full shadow-lg">
+              {currentStep <= 2 ? (
+                <button
+                  type="button"
+                  className="w-6 h-6 flex items-center justify-center"
+                  onClick={handleNextStepMobile}
+                >
+                  <ChevronRight color="#ffffff" />
+                </button>
+              ) : (
+                // Cambiamo in un vero button di tipo submit per evitare conflitti con i div cliccabili
+                <button
+                  type="submit"
+                  className="w-6 h-6 flex items-center justify-center cursor-pointer"
+                >
+                  <CheckIcon color="#ffffff" />
+                </button>
+              )}
+            </div>
+          </div>
+        </form>
+      </div>
+    </FormProvider>
   );
 };
 

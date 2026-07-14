@@ -187,8 +187,8 @@ const Home = () => {
               </p>
             </div>
 
-            {/* pb-24 serve per non far finire il contenuto sotto l'eventuale Bottom Navigation Bar mobile */}
-            <div className="pb-24">{renderContent("accepted")}</div>
+            {/* pb-2 serve per non far finire il contenuto sotto l'eventuale Bottom Navigation Bar mobile */}
+            <div className="pb-2">{renderContent("accepted")}</div>
           </section>
         </div>
       </main>

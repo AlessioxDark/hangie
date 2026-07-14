@@ -53,7 +53,7 @@ const MessageCard = ({
       {/* Avatar dell'altro utente allineato in basso (stile WhatsApp/Telegram) */}
       {!isUser && (
         <div className="w-8 h-8 flex-shrink-0 mb-1">
-          <ProfileIcon profile_pic={utenti?.profile_pic} />
+          <ProfileIcon profile_pic={utenti ? utenti.profile_pic : null} />
         </div>
       )}
 
@@ -72,7 +72,7 @@ const MessageCard = ({
         <div className="flex flex-col px-1 flex-1 min-w-0">
           {!isUser && (
             <span className="text-text-1 font-body font-bold text-[11px] uppercase tracking-wider mb-0.5">
-              {utenti?.nome}
+              {utenti ? utenti.nome : "Deleted User"}
             </span>
           )}
           <p className="font-body text-sm whitespace-pre-wrap break-words leading-snug">

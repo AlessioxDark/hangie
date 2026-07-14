@@ -163,7 +163,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
 
             <div className="flex items-center gap-2 max-w-[50%]">
               <div className="w-6 h-6 flex-shrink-0">
-                <ProfileIcon profile_pic={utenti?.profile_pic} />
+                <ProfileIcon profile_pic={utenti ? utenti.profile_pic : null} />
               </div>
               <span className="font-body text-[11px] text-text-2 truncate">
                 Da:{" "}

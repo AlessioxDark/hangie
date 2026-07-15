@@ -10,6 +10,7 @@ import EventCard from "@/features/events/EventCard";
 import RenderErrorState from "@/features/utils/RenderErrorState";
 import RenderLoadingState from "@/features/utils/RenderLoadingState";
 import { ApiCalls } from "@/services/api";
+import { Calendar } from "lucide-react";
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 
@@ -56,22 +57,25 @@ const EMPTY_MAP = {
 const EmptyState = ({ tab }) => {
   const e = EMPTY_MAP[tab] ?? EMPTY_MAP.programma;
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-bg-2 botder border-bg-3">
-        <svg
-          width="20"
-          height="20"
-          fill="none"
-          stroke={"#94a3b8"}
-          strokeWidth="1.5"
-          viewBox="0 0 24 24"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="3" />
-          <path d="M16 2v4M8 2v4M3 10h18" />
-        </svg>
+    <div className="flex flex-col items-center justify-center min-h-[150px] py-12 px-6 w-full h-full  group">
+      {/* Icona con cerchio di sfondo sfumato e transizione hover */}
+      <div className="relative flex items-center justify-center mb-6">
+        {/* Cerchio posteriore morbido con transizione al passaggio del mouse */}
+        <div className="absolute w-14 h-14 bg-gray-100/80 rounded-full group-hover:bg-gray-100 group-hover:scale-105 transition-all duration-300" />
+
+        {/* Render dell'icona */}
+        <Calendar className="relative w-7 h-7 text-gray-400 group-hover:scale-110 transition-transform duration-300" />
       </div>
-      <p className="font-bold text-sm text-text-1">{e.label}</p>
-      <p className="text-xs mt-1 leading-relaxed text-text-3">{e.sub}</p>
+
+      {/* Titolo principale */}
+      <h3 className="text-base font-semibold text-gray-800 mb-1.5 text-center tracking-tight">
+        {e.label}
+      </h3>
+
+      {/* Descrizione (Call to Action invisibile per l'utente) */}
+      <p className="text-sm text-gray-400 text-center max-w-xs leading-relaxed">
+        {e.sub}
+      </p>
     </div>
   );
 };

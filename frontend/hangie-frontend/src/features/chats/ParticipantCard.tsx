@@ -26,7 +26,7 @@ const ParticipantCard = ({
                 prevParticipants.filter((friend) => friend.handle !== handle),
               );
             }}
-            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm active:scale-90 transition-transform cursor-pointer z-10"
+            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm transition-transform cursor-pointer z-10"
             aria-label={`Rimuovi ${handle}`}
           >
             <X size={10} strokeWidth={3} />

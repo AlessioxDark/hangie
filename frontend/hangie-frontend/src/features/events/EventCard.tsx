@@ -41,7 +41,7 @@ const EventCard = ({ event }) => {
       <article
         className="
       flex flex-col bg-bg-1 border border-neutral-300/60 rounded-xl overflow-hidden relative shadow-sm
-      transition-all duration-200 active:scale-[0.99] active:bg-bg-2/50
+      transition-all duration-200 
     "
       >
         {/* Immagine di Copertina con altezza ottimizzata per smartphone */}

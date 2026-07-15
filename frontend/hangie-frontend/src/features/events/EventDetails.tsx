@@ -288,10 +288,10 @@ const EventDetails = ({
         {/* Sticky Action Buttons per Evento In Sospeso */}
         {event_status === "pending" && (
           <div className="flex items-center gap-3 w-full mt-3">
-            <button className="flex-1 bg-primary text-bg-1 font-bold py-3 rounded-xl text-sm font-body shadow-sm shadow-primary/20 transition-all active:scale-[0.97] cursor-pointer">
+            <button className="flex-1 bg-primary text-bg-1 font-bold py-3 rounded-xl text-sm font-body shadow-sm shadow-primary/20 transition-all cursor-pointer">
               Accetta
             </button>
-            <button className="flex-1 bg-bg-2 text-text-2 font-bold py-3 rounded-xl text-sm font-body border border-bg-3/60 transition-all active:scale-[0.97] active:bg-bg-3/20 cursor-pointer">
+            <button className="flex-1 bg-bg-2 text-text-2 font-bold py-3 rounded-xl text-sm font-body border border-bg-3/60 transition-all cursor-pointer">
               Rifiuta
             </button>
           </div>

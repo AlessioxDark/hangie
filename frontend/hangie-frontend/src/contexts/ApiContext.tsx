@@ -84,8 +84,10 @@ export const ApiContextProvider = ({ children }) => {
           return { ...prev, [type]: true };
         });
         const data = await fetchCall();
+        console.log("rimango qua");
         onSuccess(data);
       } catch (err: any) {
+        console.log("torno qui");
         setError((prev) => {
           return {
             ...prev,

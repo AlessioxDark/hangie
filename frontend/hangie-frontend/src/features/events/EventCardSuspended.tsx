@@ -231,7 +231,7 @@ const EventCardSuspended: React.FC<EventCardSuspendedProps> = ({
           <button
             type="button"
             onClick={(e) => handleVote(e, "accepted")}
-            className={`flex-1 font-bold py-2.5 rounded-xl transition-all duration-200 text-xs font-body active:scale-[0.96] cursor-pointer ${
+            className={`flex-1 font-bold py-2.5 rounded-xl transition-all duration-200 text-xs font-body cursor-pointer ${
               status === "accepted"
                 ? "bg-primary text-white shadow-sm shadow-primary/20"
                 : "bg-bg-2 text-text-2 border border-bg-3/60"
@@ -243,7 +243,7 @@ const EventCardSuspended: React.FC<EventCardSuspendedProps> = ({
           <button
             type="button"
             onClick={(e) => handleVote(e, "rejected")}
-            className={`flex-1 font-bold py-2.5 rounded-xl transition-all duration-200 text-xs font-body active:scale-[0.96] cursor-pointer ${
+            className={`flex-1 font-bold py-2.5 rounded-xl transition-all duration-200 text-xs font-body cursor-pointer ${
               status === "rejected"
                 ? "bg-red-500 text-white shadow-sm shadow-red-500/20"
                 : "bg-bg-2 text-text-2 border border-bg-3/60"

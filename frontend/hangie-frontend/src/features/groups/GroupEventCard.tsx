@@ -130,7 +130,7 @@ const GroupEventCard = ({
     <div
       className={`
     w-full flex flex-col p-4 bg-bg-1 border border-neutral-300/80 rounded-2xl transition-all duration-150 select-none
-    ${isInactive ? "grayscale opacity-60" : "active:scale-[0.99]"}
+    ${isInactive ? "grayscale opacity-60" : ""}
   `}
     >
       {/* Corpo della Card */}
@@ -248,11 +248,11 @@ const GroupEventCard = ({
               });
             }}
             className={`
-          flex-1 h-9 rounded-xl font-body text-xs font-bold transition-all active:scale-95 flex items-center justify-center cursor-pointer
+          flex-1 h-9 rounded-xl font-body text-xs font-bold transition-all flex items-center justify-center cursor-pointer
           ${
             status === "accepted"
               ? "bg-primary text-white shadow-sm shadow-primary/10"
-              : "bg-bg-2 text-text-2 border border-bg-3/80 active:bg-bg-3/60"
+              : "bg-bg-2 text-text-2 border border-bg-3/80"
           }
           disabled:opacity-40 disabled:cursor-not-allowed
         `}
@@ -273,11 +273,11 @@ const GroupEventCard = ({
               });
             }}
             className={`
-          flex-1 h-9 rounded-xl font-body text-xs font-bold transition-all active:scale-95 flex items-center justify-center cursor-pointer
+          flex-1 h-9 rounded-xl font-body text-xs font-bold transition-all flex items-center justify-center cursor-pointer
           ${
             status === "rejected"
               ? "bg-red-500 text-white shadow-sm shadow-red-500/10"
-              : "bg-bg-2 text-text-2 border border-bg-3/80 active:bg-bg-3/60"
+              : "bg-bg-2 text-text-2 border border-bg-3/80"
           }
           disabled:opacity-40 disabled:cursor-not-allowed
         `}

@@ -107,7 +107,7 @@ const AddParticipantsGroup = ({
             setIsParticipantsAdd(false);
           }}
           className={`
-        px-4 h-8 rounded-full font-body text-xs font-bold transition-all active:scale-95 cursor-pointer
+        px-4 h-8 rounded-full font-body text-xs font-bold transition-all cursor-pointer
         ${
           localParticipants.length === 0
             ? "bg-bg-3 text-text-3 opacity-50 cursor-not-allowed"

@@ -213,7 +213,7 @@ const CreateGroupForm = () => {
                     <button
                       type="button"
                       onClick={handleButtonClick}
-                      className="w-24 h-24 rounded-full overflow-hidden bg-bg-2 flex items-center justify-center active:scale-95 transition-transform shadow-sm border border-bg-3/40 cursor-pointer text-text-3"
+                      className="w-24 h-24 rounded-full overflow-hidden bg-bg-2 flex items-center justify-center transition-transform shadow-sm border border-bg-3/40 cursor-pointer text-text-3"
                       aria-label="Aggiungi immagine del gruppo"
                     >
                       <DefaultGroupIcon />
@@ -235,7 +235,7 @@ const CreateGroupForm = () => {
                     />
                     <button
                       type="button"
-                      className="absolute -top-1 -right-1 p-2 bg-red-500 text-white rounded-full shadow-md active:scale-90 transition-transform cursor-pointer"
+                      className="absolute -top-1 -right-1 p-2 bg-red-500 text-white rounded-full shadow-md transition-transform cursor-pointer"
                       onClick={() => setGroupImage(null)}
                     >
                       <Trash size={12} strokeWidth={2.5} />
@@ -282,7 +282,7 @@ const CreateGroupForm = () => {
                     onClick={() => setIsParticipantsAdd(true)}
                     className={`
                   w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center 
-                  border-2 border-dashed transition-all active:scale-95 cursor-pointer bg-bg-2
+                  border-2 border-dashed transition-all cursor-pointer bg-bg-2
                   ${
                     participantsError
                       ? "border-red-500 bg-red-50/10 text-red-500 ring-2 ring-red-500/20"
@@ -321,7 +321,7 @@ const CreateGroupForm = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 bg-primary text-white font-body font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.95] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-primary/10 cursor-pointer"
+                  className="w-full h-12 bg-primary text-white font-body font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm shadow-primary/10"
                 >
                   {isSubmitting ? "Creazione..." : "Crea Gruppo"}
                 </button>

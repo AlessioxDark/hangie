@@ -81,7 +81,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
         }}
         className={`
       flex flex-col bg-bg-1 border border-bg-3/60 rounded-2xl overflow-hidden
-      shadow-sm mb-4 cursor-pointer transition-all duration-200 active:scale-[0.99]
+      shadow-sm mb-4 cursor-pointer transition-all duration-200
       ${event_details.status === "rejected" ? "grayscale opacity-60 bg-bg-2" : ""}
     `}
       >
@@ -198,7 +198,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
                     },
                   );
                 }}
-                className={`flex-1 py-2.5 px-4 rounded-xl font-body font-bold text-xs transition-all active:scale-[0.95] cursor-pointer ${
+                className={`flex-1 py-2.5 px-4 rounded-xl font-body font-bold text-xs transition-all cursor-pointer ${
                   event_details.status === "accepted"
                     ? "bg-primary text-white shadow-sm shadow-primary/20"
                     : "bg-bg-2 text-text-2 border border-bg-3/60 active:bg-bg-3/40"
@@ -228,7 +228,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
                     },
                   );
                 }}
-                className={`flex-1 py-2.5 px-4 rounded-xl font-body font-bold text-xs transition-all active:scale-[0.95] cursor-pointer ${
+                className={`flex-1 py-2.5 px-4 rounded-xl font-body font-bold text-xs transition-all cursor-pointer ${
                   event_details.status === "rejected"
                     ? "bg-red-500 text-white shadow-sm shadow-red-500/10"
                     : "bg-bg-2 text-text-2 border border-bg-3/60 active:bg-bg-3/40"

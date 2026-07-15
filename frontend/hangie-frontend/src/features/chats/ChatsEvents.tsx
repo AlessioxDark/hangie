@@ -128,7 +128,7 @@ const ChatsEvents = () => {
                 type="button"
                 onClick={() => setCurrentFilter(isActive ? "" : filter)}
                 className={`
-              py-2 px-4 text-xs font-body font-bold rounded-full border transition-all duration-150 flex-shrink-0 active:scale-95 cursor-pointer
+              py-2 px-4 text-xs font-body font-bold rounded-full border transition-all duration-150 flex-shrink-0 cursor-pointer
               ${
                 isActive
                   ? "bg-primary text-white border-primary shadow-sm shadow-primary/10"

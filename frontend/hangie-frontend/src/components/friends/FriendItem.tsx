@@ -137,7 +137,7 @@ const FriendItem = ({ friend, setFetchData, type }) => {
                 e.preventDefault();
                 handleAction("accept");
               }}
-              className="h-9 px-3.5 bg-primary text-white rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
+              className="h-9 px-3.5 bg-primary text-white rounded-xl text-xs font-body font-bold transition-transform cursor-pointer"
             >
               Accetta
             </button>
@@ -148,7 +148,7 @@ const FriendItem = ({ friend, setFetchData, type }) => {
                 e.preventDefault();
                 handleAction("delete");
               }}
-              className="h-9 px-3.5 bg-bg-2 text-text-2 border border-bg-3/80 rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
+              className="h-9 px-3.5 bg-bg-2 text-text-2 border border-bg-3/80 rounded-xl text-xs font-body font-bold transition-transform cursor-pointer"
             >
               Rifiuta
             </button>
@@ -161,7 +161,7 @@ const FriendItem = ({ friend, setFetchData, type }) => {
               e.preventDefault();
               deleteFriend();
             }}
-            className="h-9 px-3.5 bg-red-500/10 text-red-600 rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
+            className="h-9 px-3.5 bg-red-500/10 text-red-600 rounded-xl text-xs font-body font-bold transition-transform cursor-pointer"
           >
             Rimuovi
           </button>
@@ -173,7 +173,7 @@ const FriendItem = ({ friend, setFetchData, type }) => {
               e.preventDefault();
               handleAction("delete");
             }}
-            className="h-9 px-3.5 bg-bg-2 text-text-3 border border-bg-3/80 rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
+            className="h-9 px-3.5 bg-bg-2 text-text-3 border border-bg-3/80 rounded-xl text-xs font-body font-bold transition-transform cursor-pointer"
           >
             Annulla
           </button>
@@ -185,7 +185,7 @@ const FriendItem = ({ friend, setFetchData, type }) => {
               e.preventDefault();
               handleAction("send");
             }}
-            className="h-9 px-3.5 bg-primary text-white rounded-xl text-xs font-body font-bold active:scale-95 transition-transform cursor-pointer"
+            className="h-9 px-3.5 bg-primary text-white rounded-xl text-xs font-body font-bold transition-transform cursor-pointer"
           >
             Aggiungi
           </button>

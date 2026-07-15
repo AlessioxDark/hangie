@@ -174,16 +174,11 @@ const EventDetailsMobile = () => {
     setCurrentEventData((prev) => ({ ...prev, status: newStatus }));
   };
   // Fix: Controllo di sicurezza robusto sullo stato vuoto
-  if (
-    !currentEventData ||
-    Object.keys(currentEventData).length === 0 ||
-    loading?.event
-  ) {
-    return <RenderLoadingState type={"event"} />;
-  }
-
   if (error?.event) {
     return <RenderErrorState reloadFunction={fetchEvent} type={"event"} />;
+  }
+  if (loading?.event || !currentEventData) {
+    return <RenderLoadingState type={"event"} />;
   }
 
   return (
@@ -335,7 +330,7 @@ const EventDetailsMobile = () => {
 
             <button
               onClick={() => navigate("participants")}
-              className="w-full flex items-center justify-between p-3 bg-orange-50 rounded-2xl border border-orange-100 active:scale-95 transition-transform"
+              className="w-full flex items-center justify-between p-3 bg-orange-50 rounded-2xl border border-orange-100 transition-transform"
             >
               <div className="flex items-center gap-1.5">
                 <div className="flex -space-x-2">
@@ -384,7 +379,7 @@ const EventDetailsMobile = () => {
                       sendSocketVoteEvent(newStatus),
                     );
                   }}
-                  className={`flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer ${
+                  className={`flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all flex items-center justify-center cursor-pointer ${
                     status === "accepted"
                       ? "bg-primary text-white shadow-md shadow-primary/20"
                       : "bg-gray-100 text-gray-700"
@@ -403,7 +398,7 @@ const EventDetailsMobile = () => {
                       sendSocketVoteEvent(newStatus),
                     );
                   }}
-                  className={`flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer ${
+                  className={`flex-1 h-12 rounded-xl font-body font-bold text-sm transition-all flex items-center justify-center cursor-pointer ${
                     status === "rejected"
                       ? "bg-red-500 text-white shadow-md shadow-red-500/20"
                       : "bg-gray-100 text-gray-700"
@@ -423,15 +418,6 @@ const EventDetailsMobile = () => {
                 >
                   Elimina Evento
                 </button>
-                // <button
-                //   type="button"
-                //   className="w-full h-10 text-red-500 bg-red-50 font-body font-bold text-xs rounded-xl active:scale-[0.98] transition-all border border-red-100 flex items-center justify-center cursor-pointer mt-1"
-                //   onClick={() =>
-                //     handleDeleteEvent(eventId, sendSocketDeleteEvent)
-                //   }
-                // >
-                //   Elimina Evento
-                // </button>
               )}
             </div>
           </div>

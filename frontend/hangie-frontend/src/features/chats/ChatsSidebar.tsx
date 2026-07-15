@@ -39,7 +39,7 @@ const ChatsSidebar = () => {
 
         {/* Pulsante Crea Gruppo (Area touch ottimizzata con active) */}
         <button
-          className="bg-primary rounded-full p-2.5 flex items-center justify-center transition-all active:scale-[0.93] cursor-pointer shadow-sm shadow-primary/10"
+          className="bg-primary rounded-full p-2.5 flex items-center justify-center transition-all cursor-pointer shadow-sm shadow-primary/10"
           onClick={() => {
             setMobileView("CREATE_GROUP");
           }}

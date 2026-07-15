@@ -49,7 +49,6 @@ const getAllGroups = async (req, res) => {
       const timeB = b.ultimoMessaggio ? new Date(b.ultimoMessaggio.sent_at) : 0;
       return timeB - timeA;
     });
-    console.log("formattd groups", formattedData);
     res.status(200).json({
       success: true,
       message: "Operazione completata con successo",

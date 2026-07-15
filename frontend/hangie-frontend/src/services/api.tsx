@@ -2,11 +2,32 @@
 const BASE_URL = "http://localhost:3000/api";
 const handleResponse = async (res) => {
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw { ...errorData, status: res.status };
-  }
-  const dataToSend = await res.json();
+    let errorData = {};
+    try {
+      // Proviamo a leggere il JSON, altrimenti leggiamo come testo
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        errorData = await res.json();
+      } else {
+        const textError = await res.text();
+        errorData = { message: textError || `Errore HTTP ${res.status}` };
+      }
+    } catch (e) {
+      console.log("non è ok");
+      errorData = { message: "Impossibile leggere la risposta del server" };
+    }
 
+    throw {
+      message:
+        (errorData as any).message ||
+        (errorData as any).details ||
+        "Errore sconosciuto",
+      status: res.status,
+      details: (errorData as any).details || null,
+    };
+  }
+
+  const dataToSend = await res.json();
   return dataToSend.data !== undefined ? dataToSend.data : dataToSend;
 };
 

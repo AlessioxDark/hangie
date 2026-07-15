@@ -26,11 +26,6 @@ const getAll = async (req) => {
 const getGroup = async (req) => {
   try {
     const user = req.user;
-    if (!user) {
-      throw {
-        message: "Utente non autenticato.",
-      };
-    }
     const { group_id } = req.params;
     const user_id = user.id;
 
@@ -40,7 +35,7 @@ const getGroup = async (req) => {
     ] = await Promise.all([
       supabase
         .from("partecipanti_gruppo")
-        .select(`gruppi:group_id(*), utenti:partecipante_id(*)`) // Seleziona il gruppo e i dati del partecipante che accede
+        .select(`gruppi:group_id(*), utenti:partecipante_id(*)`)
         .eq("group_id", group_id)
         .eq("partecipante_id", user_id)
         .single(),
@@ -52,8 +47,9 @@ const getGroup = async (req) => {
     ]);
 
     if (accessError || !participantRow) {
-      throw {
-        message: "Gruppo non trovato o accesso negato.",
+      return {
+        data: null,
+        error: { message: "Gruppo non trovato o accesso negato.", status: 403 },
       };
     }
     const groupDetails = participantRow.gruppi;
@@ -63,28 +59,37 @@ const getGroup = async (req) => {
 
     const eventIds = messages
       .filter((m) => m.type === "event" && m.event_id)
-      .map((m) => m.event_id);
+      .map((m) => m.event_id); // Se non ci sono messaggi di tipo evento, saltiamo la query per evitare errori con .in() vuoti
 
-    const { data: eventsDetails, error: eventsError } = await supabase
-      .from("eventi")
-      .select(
-        `*,
-            utente:utenti(nome, user_id),
-            luogo:luoghi(nome, citta, indirizzo),
-            risposte_evento:risposte_eventi(*, utenti(profile_pic, user_id, nome))
-            `,
-      )
-      .in("event_id", eventIds);
-    const newEventsDetails = eventsDetails.map((e) => {
-      const risposta = e.risposte_evento.find((r) => r.user_id == user.id);
-      return { ...e, status: risposta.status };
-    });
-    if (eventsError) throw eventsError;
+    let eventDetail = {};
+    if (eventIds.length > 0) {
+      const { data: eventsDetails, error: eventsError } = await supabase
+        .from("eventi")
+        .select(
+          `*,
+            utente:utenti(nome, user_id),
+            luogo:luoghi(nome, citta, indirizzo),
+            risposte_evento:risposte_eventi(*, utenti(profile_pic, user_id, nome))
+          `,
+        )
+        .in("event_id", eventIds);
 
-    const eventDetail = newEventsDetails.reduce((acc, event) => {
-      acc[event.event_id] = event;
-      return acc;
-    }, {});
+      if (eventsError) throw eventsError;
+
+      const safeEventsDetails = (eventsDetails || []).map((e) => {
+        // ✅ FIX SICUREZZA: Optional chaining e fallback su "pending" se la risposta non esiste
+        const risposta = e.risposte_evento?.find((r) => r.user_id == user.id);
+        return {
+          ...e,
+          status: risposta ? risposta.status : "pending",
+        };
+      });
+
+      eventDetail = safeEventsDetails.reduce((acc, event) => {
+        acc[event.event_id] = event;
+        return acc;
+      }, {});
+    }
 
     const definitiveMessages = messages.map((m) => {
       const isUser = m.user_id === user.id;

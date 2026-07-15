@@ -121,7 +121,7 @@ const ChatInput = ({
         transition-all duration-150 flex-shrink-0 mb-0.5 cursor-pointer
         ${
           isSendActive
-            ? "bg-primary text-white active:scale-90 shadow-md shadow-primary/10"
+            ? "bg-primary text-white shadow-md shadow-primary/10"
             : "bg-primary text-text-3 opacity-60 cursor-not-allowed"
         }
       `}

@@ -158,7 +158,7 @@ const Profile = () => {
           <button
             type="button"
             onClick={handleLogoutUser}
-            className="h-8 px-3.5 bg-red-500/10 text-red-600 font-body font-bold text-xs rounded-xl active:scale-95 transition-transform cursor-pointer flex items-center justify-center"
+            className="h-8 px-3.5 bg-red-500/10 text-red-600 font-body font-bold text-xs rounded-xl  transition-transform cursor-pointer flex items-center justify-center"
           >
             Logout
           </button>
@@ -221,7 +221,7 @@ const Profile = () => {
           <div className="px-4 pb-4">
             <button
               type="button"
-              className="w-full h-11 rounded-xl font-body text-xs font-bold text-white bg-primary active:scale-[0.98] transition-all cursor-pointer shadow-sm shadow-primary/10 flex items-center justify-center"
+              className="w-full h-11 rounded-xl font-body text-xs font-bold text-white bg-primary  transition-all cursor-pointer shadow-sm shadow-primary/10 flex items-center justify-center"
             >
               Aggiungi amico
             </button>

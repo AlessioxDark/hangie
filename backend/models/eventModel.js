@@ -128,37 +128,55 @@ const getEvent = async (req) => {
   try {
     const { event_id } = req.params;
     const user = req.user;
+
+    // 1. Recupera l'evento associato all'utente corrente
     const { data: eventData, error: eventError } = await supabase
       .from("risposte_eventi")
       .select(
         `event_id,
-        status,eventi(event_id,
-                      costo,
-                      created_at,
-                      created_by,
-                      data,
-                      titolo,
-                      descrizione,
-                      data_scadenza,
-                      cover_img,
-                      event_imgs(*),
-                      utenti(user_id,nome,profile_pic),
-                      luoghi(*),
-                      gruppi(group_id,nome,group_cover_img,partecipanti_gruppo(partecipante_id)))`,
+        user_id,
+        status,
+        eventi(
+          event_id,
+          costo,
+          created_at,
+          created_by,
+          data,
+          titolo,
+          descrizione,
+          data_scadenza,
+          cover_img,
+          event_imgs(*),
+          utenti(user_id, nome, profile_pic),
+          luoghi(*),
+          gruppi(group_id, nome, group_cover_img, partecipanti_gruppo(partecipante_id))
+        )`,
       )
       .eq("event_id", event_id)
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle(); // Ritorna null se non trova nulla, senza lanciare eccezioni di db
+
     if (eventError) throw eventError;
 
+    // Se l'utente non è invitato, non troveremo alcun record
+    if (!eventData) {
+      console.log("non c'è");
+      return {
+        data: null,
+        error: { message: "Non sei invitato a questo evento", details: "" },
+      };
+    }
+
+    // 2. Recupera tutti i partecipanti dello stesso evento
     const { data: eventParticipants, error: eventParticipantsError } =
       await supabase
         .from("risposte_eventi")
-        .select("status, utente:utenti(*), created_at, is_creator") // Rimosso eventi(*) se non ti serve nel return
-        .eq("event_id", event_id); // Filtro diretto sulla tabella principale
+        .select("status, user_id, utente:utenti(*), created_at, is_creator")
+        .eq("event_id", event_id);
 
     if (eventParticipantsError) throw eventParticipantsError;
 
+    // Formatta la lista partecipanti
     const newRisposte = eventParticipants.map((risposta) => ({
       utenti: risposta.utente,
       status: risposta.status,

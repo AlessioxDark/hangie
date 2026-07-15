@@ -65,34 +65,50 @@ const getMyEvents = async (req, res) => {
 };
 const getSpecificEvent = async (req, res) => {
   try {
-    const { data, error } = await Event.getEvent(req);
-    if (error) throw error;
-    let newData = {
+    console.log("ARRR");
+    const { data, error } = await Event.getEvent(req); // Rimosso 'res' dai parametri del service
+    console.log("ritorno con", { data, error });
+    if (error) {
+      console.log("invio");
+      // Se l'errore è dovuto alla mancanza di invito, restituiamo un 403 Forbidden
+      if (error.message === "Non sei invitato a questo evento") {
+        console.log("invio");
+        console.log("invio");
+        return res.status(403).json({
+          success: false,
+          message: error.message,
+        });
+      }
+      throw error; // Altri errori imprevisti finiscono nel catch (500)
+    }
+
+    // Costruiamo il payload di risposta
+    const newData = {
       event_id: data.event_id,
-      status: data.status, // Stato (pending, accepted, refused)
-      costo: data.eventi.costo,
-      data: data.eventi.data,
-      titolo: data.eventi.titolo,
-      descrizione: data.eventi.descrizione,
-      cover_img: data.eventi.cover_img,
-      event_imgs: data.eventi.event_imgs,
-      luogo: data.eventi.luoghi, // Attenzione, qui è 'luoghi' non 'luogo'
-      utente: data.eventi.utenti,
-      gruppo: data.eventi.gruppi, // Attenzione, qui è 'gruppi' non 'gruppo'
-      scadenza: data.eventi.data_scadenza,
-      created_by: data.eventi.created_by,
+      status: data.status,
+      costo: data.eventi?.costo,
+      data: data.eventi?.data,
+      titolo: data.eventi?.titolo,
+      descrizione: data.eventi?.descrizione,
+      cover_img: data.eventi?.cover_img,
+      event_imgs: data.eventi?.event_imgs,
+      luogo: data.eventi?.luoghi,
+      utente: data.eventi?.utenti,
+      gruppo: data.eventi?.gruppi,
+      scadenza: data.eventi?.data_scadenza,
+      created_by: data.eventi?.created_by,
       risposte_evento: data.partecipanti,
     };
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Operazione completata con successo", // Opzionale, utile per i toast
-      data: newData, // <--- I dati reali che hai appena creato o modificato
+      message: "Operazione completata con successo",
+      data: newData,
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Non siamo a trovare il tuo evento", // Messaggio generico per l'utente
+      message: "Impossibile trovare l'evento richiesto", // Sistemato typo "Non siamo a trovare..."
       details: err.message,
     });
   }

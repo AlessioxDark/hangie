@@ -54,8 +54,8 @@ export const SocketProvider = ({ children }) => {
     currentGroupDataRef.current = currentGroupData;
   }, [currentGroupData]);
 
-  // const SERVER_URL = "https://hangie-web.onrender.com/";
-  const SERVER_URL = "http://localhost:3000/";
+  const SERVER_URL = "https://hangie-web.onrender.com/";
+  // const SERVER_URL = "http://localhost:3000/";
   useEffect(() => {
     if (!session?.user?.id || currentScreen !== "xs") {
       return;

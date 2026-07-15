@@ -163,14 +163,14 @@ const EventCard = ({ event }) => {
             <div className="w-full h-[1px] bg-bg-3/50"></div>
             <div className="flex flex-row items-center gap-2">
               <div className="w-7 h-7 flex-shrink-0 rounded-full overflow-hidden">
-                <ProfileIcon profile_pic={utente.profile_pic} />
+                <ProfileIcon profile_pic={utente ? utente.profile_pic : null} />
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] text-text-3 font-body leading-none mb-0.5">
                   Organizzato da
                 </span>
                 <span className="font-body text-text-2 font-semibold text-xs leading-none">
-                  {utente.nome}
+                  {utente ? utente.nome : "Deleted User"}
                 </span>
               </div>
             </div>

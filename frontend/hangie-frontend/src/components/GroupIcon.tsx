@@ -3,7 +3,11 @@ import DefaultGroupIcon from "@/assets/icons/DefaultGroupIcon";
 
 const GroupIcon = ({ group_cover_img, className = "w-6 h-6" }) => {
   if (group_cover_img == null) {
-    return <DefaultGroupIcon />;
+    return (
+      <div className={className}>
+        <DefaultGroupIcon />
+      </div>
+    );
   }
 
   return (

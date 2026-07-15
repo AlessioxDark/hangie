@@ -359,14 +359,14 @@ const EventDetailsMobile = () => {
 
             <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-2xl">
               <div className="w-10 h-10">
-                <ProfileIcon profile_pic={utente?.profile_pic} />
+                <ProfileIcon profile_pic={utente ? utente.profile_pic : null} />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-primary uppercase tracking-wider">
                   Organizzatore
                 </p>
                 <p className="text-sm font-semibold text-text-1 leading-tight">
-                  {utente?.nome}
+                  {utente ? utente.nome : "Deleted User"}
                 </p>
               </div>
             </div>

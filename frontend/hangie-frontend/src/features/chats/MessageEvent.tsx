@@ -168,7 +168,9 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
               <span className="font-body text-[11px] text-text-2 truncate">
                 Da:{" "}
                 <span className="font-semibold text-text-1">
-                  {event_details.utente?.nome}
+                  {event_details.utente
+                    ? event_details.utente?.nome
+                    : "Deleted User"}
                 </span>
               </span>
             </div>

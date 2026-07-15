@@ -217,10 +217,10 @@ const EventCardSuspended: React.FC<EventCardSuspendedProps> = ({
         <div className="w-full h-[1px] bg-bg-3/50" />
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 flex-shrink-0 rounded-full overflow-hidden">
-            <ProfileIcon profile_pic={utente.profile_pic} />
+            <ProfileIcon profile_pic={utente ? utente.profile_pic : null} />
           </div>
           <p className="text-xs font-semibold text-text-2 truncate font-body">
-            {utente.nome}{" "}
+            {utente ? utente.nome : "Deleted User"}{" "}
             <span className="text-[11px] text-text-3 font-normal font-body">
               ti ha invitato
             </span>

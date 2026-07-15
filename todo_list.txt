@@ -1,2 +1,0 @@
-gestire stato user_id messaggi null
-gestire stato user_id creatore eventi null

@@ -1,7 +1,7 @@
 import { Loader2 } from "lucide-react";
 
 const RenderLoadingState = ({ type }) => {
-  const message = {
+  const messages = {
     groups: {
       main: "Caricamento dei gruppi in corso...",
       alt: "Stiamo cercando i tuoi gruppi",
@@ -49,17 +49,30 @@ const RenderLoadingState = ({ type }) => {
     log_out: {
       main: "Uscita in corso...",
       alt: "",
+    }, // Fallback di sicurezza se passi un type inesistente
+    default: {
+      main: "Caricamento in corso...",
+      alt: "Un attimo di pazienza",
     },
   };
+
+  // Se 'type' non esiste nell'oggetto, usa il fallback 'default' senza crashare
+  const currentMessage = messages[type] || messages.default;
+
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-4 w-full h-full ">
-      <div className=" rounded-full flex items-center justify-center mb-6">
-        <Loader2 className="w-16 h-16 text-primary animate-spin" />
+    <div className="flex flex-col items-center justify-center min-h-[350px] py-12 px-6 w-full h-full ">
+      <div className="relative flex items-center justify-center mb-6">
+        <Loader2 className="relative w-14 h-14 text-primary animate-spin" />
       </div>
-      <h3 className="text-xl font-medium text-gray-900 mb-2 text-center">
-        {message[type].main}
+      <h3 className="text-lg font-semibold text-gray-800 tracking-tight mb-1.5 text-center max-w-xs">
+        {currentMessage.main}
       </h3>
-      <p className="text-gray-500 text-center  ">{message[type].alt}</p>
+
+      {currentMessage.alt && (
+        <p className="text-sm text-gray-400 font-medium text-center max-w-xs ">
+          {currentMessage.alt}
+        </p>
+      )}
     </div>
   );
 };

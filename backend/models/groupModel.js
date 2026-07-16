@@ -38,13 +38,14 @@ const getGroup = async (req) => {
         .select(`gruppi:group_id(*), utenti:partecipante_id(*)`)
         .eq("group_id", group_id)
         .eq("partecipante_id", user_id)
-        .single(),
+        .maybeSingle(),
       supabase
         .from("messaggi")
         .select("*,utenti(*),messaggi_status(*)")
         .eq("group_id", group_id)
         .order("sent_at", { ascending: true }),
     ]);
+    if (messagesError) throw messagesError;
 
     if (accessError || !participantRow) {
       return {
@@ -54,7 +55,6 @@ const getGroup = async (req) => {
     }
     const groupDetails = participantRow.gruppi;
 
-    if (messagesError) throw messagesError;
     const messages = messagesData || [];
 
     const eventIds = messages
@@ -101,7 +101,7 @@ const getGroup = async (req) => {
 
       const isSent =
         statuses.length > 0 &&
-        statuses.every((s) => s.status === "delivered" || s.status === "read");
+        statuses.every((s) => s.status === "sent" || s.status === "read");
       return {
         ...m,
         isUser,
@@ -127,6 +127,7 @@ const getGroup = async (req) => {
 const getEvents = async (req) => {
   try {
     const { group_id } = req.params;
+    const user = req.user;
 
     const { data: eventsData, error: eventsError } = await supabase
       .from("eventi_gruppo")
@@ -140,31 +141,36 @@ const getEvents = async (req) => {
 
     const { data: risposte, error: risposteError } = await supabase
       .from("risposte_eventi")
-      .select(
-        "user_id,is_creator,status,eventi!inner( event_id, gruppi!inner(group_id))",
-      )
-      .in("eventi.event_id", eventIds)
-      .eq("eventi.gruppi.group_id", group_id);
+      .select("user_id, is_creator, status, event_id")
+      .in("event_id", eventIds);
+    // .eq("eventi.gruppi.group_id", group_id);
     if (risposteError) throw risposteError;
 
-    const newRisposte = risposte.reduce((acc, event) => {
-      if (!acc[event.eventi.event_id]) acc[event.eventi.event_id] = [];
-      acc[event.eventi.event_id].push({
-        is_creator: event.is_creator,
-        user_id: event.user_id,
-        status: event.status,
+    const newRisposte = (risposte || []).reduce((acc, current) => {
+      const eId = current.event_id;
+      if (!acc[eId]) acc[eId] = [];
+      acc[eId].push({
+        is_creator: current.is_creator,
+        user_id: current.user_id,
+        status: current.status,
       });
       return acc;
     }, {});
-    const user = req.user;
+
     const newData = eventsData.map((e) => {
-      const eventStatus = newRisposte[e.eventi.event_id].find(
-        (r) => r.user_id == user.id,
+      const currentEventId = e?.event_id;
+      const rispostePerEvento = newRisposte[currentEventId] || [];
+
+      // Cerchiamo la risposta dell'utente loggato all'interno di questo evento
+      const userStatusRecord = rispostePerEvento.find(
+        (r) => r.user_id === user.id,
       );
+
       return {
         ...e,
-        partecipanti: newRisposte[e.eventi.event_id],
-        status: eventStatus.status,
+        partecipanti: rispostePerEvento,
+        // ✅ Se l'utente non ha una risposta registrata, va in "pending" invece di crashare
+        status: userStatusRecord ? userStatusRecord.status : "pending",
       };
     });
     return { data: newData, error: null };
@@ -254,155 +260,143 @@ const leave = async (req) => {
   try {
     const { group_id } = req.params;
     const user = req.user;
-    const { data, error } = await supabase
+
+    // 1. Rimuoviamo il partecipante dal gruppo
+    const { data: deleteData, error: deleteError } = await supabase
       .from("partecipanti_gruppo")
       .delete()
       .eq("group_id", group_id)
       .eq("partecipante_id", user.id);
-    if (error) throw error;
+
+    if (deleteError) throw deleteError;
+
+    // NOTA: Le risposte di questo utente agli eventi del gruppo NON serve cancellarle a mano!
+    // Se un domani l'evento viene eliminato, si cancelleranno in automatico.
+    // Se invece vuoi rimuoverle subito perché l'utente è uscito, la cascata su "utenti" non basta,
+    // quindi la facciamo qui in modo rapido e sicuro.
     const { data: rowsToDelete, error: ErrorRowsDelete } = await supabase
       .from("risposte_eventi")
-      .select("response_id,eventi(group_id)")
+      .select("response_id, eventi(group_id)")
       .eq("user_id", user.id);
-    if (ErrorRowsDelete) throw ErrorRowsDelete;
-    const newRowsToDelete = rowsToDelete
-      .filter((r) => r.eventi.group_id == group_id)
-      .map((r) => r.response_id);
-    const { error: eventsError } = await supabase
-      .from("risposte_eventi")
-      .delete()
-      .in("response_id", newRowsToDelete);
-    if (eventsError) throw eventsError;
+
+    if (!ErrorRowsDelete && rowsToDelete) {
+      const newRowsToDelete = rowsToDelete
+        .filter((r) => r.eventi?.group_id === group_id)
+        .map((r) => r.response_id);
+
+      if (newRowsToDelete.length > 0) {
+        await supabase
+          .from("risposte_eventi")
+          .delete()
+          .in("response_id", newRowsToDelete);
+      }
+    }
 
     const { data: participantsData, error: participantsError } = await supabase
       .from("partecipanti_gruppo")
       .select("*")
       .eq("group_id", group_id)
-      .order("joinedAt", { ascending: false });
+      .order("joinedAt", { ascending: true });
+
     if (participantsError) throw participantsError;
 
+    const count = participantsData ? participantsData.length : 0;
+
+    // ==========================================
+    // CASO A: IL GRUPPO È VUOTO -> PULIZIA TOTALMENTE DELEGATA AL DB
+    // ==========================================
+    if (count === 0) {
+      // 🚨 Lo storage va pulito prima di distruggere i record del DB,
+      // altrimenti perderemmo i riferimenti (gli ID degli eventi) per fare il listing dei file.
+      const { data: messages, error: messageError } = await supabase
+        .from("messaggi")
+        .select("event_id")
+        .eq("group_id", group_id)
+        .eq("type", "event");
+
+      if (!messageError && messages && messages.length > 0) {
+        const eventIds = messages.map((m) => m.event_id).filter(Boolean);
+
+        // Svuotiamo le cartelle storage degli eventi associati
+        for (const eventId of eventIds) {
+          const { data: folderContent } = await supabase.storage
+            .from("eventi")
+            .list(eventId);
+          if (folderContent && folderContent.length > 0) {
+            const filesToDelete = folderContent.map(
+              (file) => `${eventId}/${file.name}`,
+            );
+            await supabase.storage.from("eventi").remove(filesToDelete);
+          }
+        }
+      }
+
+      // Svuotiamo la cartella delle copertine del gruppo nello Storage
+      const { data: groupFolderContent } = await supabase.storage
+        .from("group_cover_imgs")
+        .list(group_id);
+
+      if (groupFolderContent && groupFolderContent.length > 0) {
+        const filesToDelete = groupFolderContent.map(
+          (file) => `${group_id}/${file.name}`,
+        );
+        await supabase.storage.from("group_cover_imgs").remove(filesToDelete);
+      }
+
+      // Grazie ai  CASCADE, questa singola query cancella:
+      // - Messaggi
+      // - Stati dei messaggi
+      // - Notifiche
+      // - Eventi di gruppo ed Eventi fisici
+      // - Immagini dei record evento
+      // - Risposte di tutti gli utenti agli eventi del gruppo
+      const { error: GroupsError } = await supabase
+        .from("gruppi")
+        .delete()
+        .eq("group_id", group_id);
+
+      if (GroupsError) throw GroupsError;
+
+      return { data: deleteData, error: null };
+    }
+
+    // ==========================================
+    // CASO B: RIMANGONO PARTECIPANTI -> GESTIONE AMMINISTRATORI
+    // ==========================================
     const { data: groupData, error: groupError } = await supabase
       .from("gruppi")
       .select("*")
       .eq("group_id", group_id)
       .single();
+
     if (groupError) throw groupError;
-    const { count, error: countError } = await supabase
-      .from("partecipanti_gruppo")
-      .select("*", { count: "exact", head: true })
-      .eq("group_id", group_id);
-    if (countError) throw countError;
 
-    if (count == 0) {
-      const { error: notificanError } = await supabase
-        .from("notifiche")
-        .delete()
-        .eq("group_id", group_id);
-      if (notificanError) throw notificanError;
-      const { data: messages, error: messageError } = await supabase
-        .from("messaggi")
-        .select("message_id,type,event_id")
-        .eq("group_id", group_id);
-
-      if (messageError) throw messageError;
-      const messageEvents = messages.filter((m) => m.type == "event");
-      const messageIds = messages.map((m) => m.message_id);
-      if (messages && messages.length > 0) {
-        // 2. Elimina gli stati per quei messaggi
-        await supabase
-          .from("messaggi_status")
-          .delete()
-          .in("messaggio_id", messageIds);
-      }
-      if (messageEvents) {
-        const messageEventsEventsIds = messageEvents.map((m) => m.event_id);
-        for (const eventId of messageEventsEventsIds) {
-          if (!eventId) continue; // Salta se per caso l'ID è nullo
-
-          // 1. Elenca i file nella cartella dell'evento
-          const { data: folderContent, error: folderError } =
-            await supabase.storage.from("eventi").list(eventId);
-          if (folderError) throw folderError;
-
-          if (folderContent && folderContent.length > 0) {
-            // 2. Crea i percorsi completi
-            const filesToDelete = folderContent.map(
-              (file) => `${eventId}/${file.name}`,
-            );
-
-            // 3. Elimina i file dallo storage
-            await supabase.storage.from("eventi").remove(filesToDelete);
-          }
-        }
-        const { error: eventsError } = await supabase
-          .from("eventi")
-          .delete()
-          .in("event_id", messageEventsEventsIds);
-
-        if (eventsError) throw eventsError;
-        const { error: groupEventsError } = await supabase
-          .from("eventi_gruppo")
-          .delete()
-          .eq("group_id", group_id);
-
-        if (groupEventsError) throw groupEventsError;
-      }
-      const { error: messagesStatusError } = await supabase
-        .from("messaggi_status")
-        .delete()
-        .in("message_id", messageIds);
-      if (messagesStatusError) throw messagesStatusError;
-      const { error: messagesError } = await supabase
-        .from("messaggi")
-        .delete()
-        .in("message_id", messageIds);
-      if (messagesError) throw messagesError;
-
-      const { data: folderContent, error: folderError } = await supabase.storage
-        .from("group_cover_imgs")
-        .list(group_id);
-      if (folderError) throw folderError;
-
-      if (folderContent && folderContent.length > 0) {
-        // Trasforma la lista in percorsi completi: "ID_GRUPPO/file.jpg"
-        const filesToDelete = folderContent.map(
-          (file) => `${group_id}/${file.name}`,
-        );
-
-        // Elimina i file: questo farà sparire la cartella
-        await supabase.storage.from("group_cover_imgs").remove(filesToDelete);
-      }
-
-      const { error: GroupsError } = await supabase
-        .from("gruppi")
-        .delete()
-        .eq("group_id", group_id);
-      if (GroupsError) throw GroupsError;
-      return { data, error: null };
-    }
-
-    const isAdmin = participantsData.some((p) => p.role == "admin");
-    const isCreator = participantsData.some(
-      (p) => p.partecipante_id == groupData.createdBy,
+    const isAdmin = participantsData.some((p) => p.role === "admin");
+    const isCreatorStillIn = participantsData.some(
+      (p) => p.partecipante_id === groupData.createdBy,
     );
-    if (!isAdmin) {
-      const { error: adminError } = await supabase
+
+    // Se non ci sono più admin, promuoviamo il membro più anziano (indice 0 con joinedAt ASC)
+    if (!isAdmin && participantsData.length > 0) {
+      await supabase
         .from("partecipanti_gruppo")
         .update({ role: "admin" })
+        .eq("group_id", group_id)
         .eq("partecipante_id", participantsData[0].partecipante_id);
-      if (adminError) throw adminError;
     }
-    if (!isCreator) {
-      const { error: adminGroupError } = await supabase
+
+    // Se il proprietario originario è uscito, passiamo la corona al membro più anziano
+    if (!isCreatorStillIn && participantsData.length > 0) {
+      await supabase
         .from("gruppi")
         .update({ createdBy: participantsData[0].partecipante_id })
         .eq("group_id", group_id);
-      if (adminGroupError) throw adminGroupError;
     }
 
-    return { data, error: null };
+    return { data: deleteData, error: null };
   } catch (err) {
-    return { data: null, error: err };
+    console.error("Errore leave group:", err);
+    return { data: null, error: err.message || err };
   }
 };
 const addParticipants = async (req) => {

@@ -23,14 +23,16 @@ const TABS = [
 ];
 
 const TabBar = ({ active, onChange }) => (
-  <div className="flex border-b border-bg-3">
+  <div className="flex border-b border-bg-3 sticky top-14 z-[200] bg-bg-1 transition-shadow duration-200">
     {TABS.map((t) => {
       const on = active === t.id;
       return (
         <button
           key={t.id}
           onClick={() => onChange(t.id)}
-          className={`flex-1 py-3.5 text-[11px] font-bold uppercase tracking-widest transition-colors border-b-2 ${on ? "text-primary border-primary" : "text-text-3"}`}
+          className={`flex-1 py-3.5 text-[11px] font-bold uppercase tracking-widest transition-colors border-b-2 ${
+            on ? "text-primary border-primary" : "text-text-3"
+          }`}
         >
           {t.label}
         </button>
@@ -137,7 +139,7 @@ const Profile = () => {
   };
   return (
     <div className="w-full min-h-screen bg-bg-1 flex flex-col select-none">
-      {/* ── HEADER NAVIGATION BAR ── */}
+      {/* ── HEADER NAVIGATION BAR (Fisso in cima) ── */}
       <div className="w-full px-4 h-14 border-b border-bg-3/60 flex flex-row items-center justify-between sticky top-0 bg-bg-1/95 backdrop-blur-md z-[100]">
         {!isOwnProfile ? (
           <button
@@ -158,15 +160,15 @@ const Profile = () => {
           <button
             type="button"
             onClick={handleLogoutUser}
-            className="h-8 px-3.5 bg-red-500/10 text-red-600 font-body font-bold text-xs rounded-xl  transition-transform cursor-pointer flex items-center justify-center"
+            className="h-8 px-3.5 bg-red-500/10 text-red-600 font-body font-bold text-xs rounded-xl transition-transform cursor-pointer flex items-center justify-center"
           >
             Logout
           </button>
         )}
       </div>
 
-      {/* ── CORPO PROFILO (INFORMAZIONI UTENTE) ── */}
-      <div className="w-full flex flex-col bg-bg-1 border-b border-bg-3/50">
+      {/* ── CORPO PROFILO (Scorre normalmente) ── */}
+      <div className="w-full flex flex-col bg-bg-1">
         {/* Blocco Dati Utente: Avatar, Nome, Karma */}
         <div className="flex flex-row items-center justify-between gap-3 px-4 pt-4 pb-3 min-w-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -216,24 +218,25 @@ const Profile = () => {
           <StatBlock value={profileData?.friendsCount || 0} label="Amici" />
         </div>
 
-        {/* Pulsante di Invito/Azione Rapida (CTA Esterna) */}
+        {/* Pulsante di Invito/Azione Rapida */}
         {!isOwnProfile && (
           <div className="px-4 pb-4">
             <button
               type="button"
-              className="w-full h-11 rounded-xl font-body text-xs font-bold text-white bg-primary  transition-all cursor-pointer shadow-sm shadow-primary/10 flex items-center justify-center"
+              className="w-full h-11 rounded-xl font-body text-xs font-bold text-white bg-primary transition-all cursor-pointer shadow-sm shadow-primary/10 flex items-center justify-center"
             >
               Aggiungi amico
             </button>
           </div>
         )}
 
-        {/* Selettore a Tabulazione */}
+        {/* ── LE TABS ANCORATE ── */}
+        {/* Quando lo scroll le spinge in alto, si bloccano a top-14 (sotto l'header) */}
         <TabBar active={activeTab} onChange={setActiveTab} />
       </div>
 
-      {/* ── SEZIONE EVENTI FILTRATI (LISTA DINAMICA) ── */}
-      <div className="px-4 pt-4 flex flex-col gap-3 flex-1">
+      {/* ── SEZIONE EVENTI FILTRATI ── */}
+      <div className="px-4 pt-4 flex flex-col gap-3 flex-1 bg-bg-1">
         {filtered.length === 0 ? (
           <EmptyState tab={activeTab} />
         ) : (

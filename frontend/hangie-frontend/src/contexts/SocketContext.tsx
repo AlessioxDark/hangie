@@ -260,6 +260,7 @@ export const SocketProvider = ({ children }) => {
           navigate("/chats");
           setCurrentGroup(null);
         }
+        return;
       }
 
       // 👥 SE È UN ALTRO UTENTE (Gli altri rimasti nel gruppo):

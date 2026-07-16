@@ -1,7 +1,6 @@
 import DoubleTick from "@/assets/icons/DoubleTick";
 import TickIcon from "@/assets/icons/TickIcon";
 import ProfileIcon from "@/components/ProfileIcon";
-import { useEffect, useState } from "react";
 
 const MessageCard = ({
   isUser,
@@ -21,25 +20,28 @@ const MessageCard = ({
   const renderTick = () => {
     if (!isUser) return null;
 
-    // Sostituite le classi h-4.5 (non valide in Tailwind standard) con h-4
+    // 1. MESSAGGIO LETTO (Spunta azzurra stile WhatsApp/Telegram - super riconoscibile)
     if (isRead) {
       return (
-        <div className="w-5 h-4 flex-shrink-0">
-          <DoubleTick color="currentColor" className="text-white" />
-        </div>
-      );
-    }
-    if (isSent) {
-      return (
-        <div className="w-5 h-4 flex-shrink-0">
-          <DoubleTick color="currentColor" className="text-white/60" />
+        <div className="w-5 h-4 flex-shrink-0 flex items-center justify-center">
+          <DoubleTick className="text-cyan-300 drop-shadow-[0_0_1px_rgba(56,189,248,0.2)]" />
         </div>
       );
     }
 
+    // 2. MESSAGGIO CONSEGNATO (Doppia spunta grigio-chiara/bianco opaco)
+    if (isSent) {
+      return (
+        <div className="w-5 h-4 flex-shrink-0 flex items-center justify-center">
+          <DoubleTick className="text-white/50" />
+        </div>
+      );
+    }
+
+    // 3. MESSAGGIO INVIATO (Spunta singola grigio-chiara/bianco opaco)
     return (
-      <div className="w-5 h-4 flex-shrink-0">
-        <TickIcon color="currentColor" className="text-white/60" />
+      <div className="w-5 h-4 flex-shrink-0 flex items-center justify-center">
+        <TickIcon className="text-white/50" />
       </div>
     );
   };

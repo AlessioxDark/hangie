@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useChat } from "@/contexts/ChatContext";
 import { useScreen } from "@/contexts/ScreenContext";
 import { useSocket } from "@/contexts/SocketContext";
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router";
 import GroupIcon from "@/components/GroupIcon";
 
@@ -61,6 +61,11 @@ const EventCardSuspended: React.FC<EventCardSuspendedProps> = ({
   const { currentSocket } = useSocket();
   const { session } = useAuth();
 
+  const isExpired = useMemo(() => {
+    if (!scadenza) return false;
+    return new Date(scadenza).getTime() < Date.now();
+    // return false;
+  }, [scadenza]);
   const risposteAccepted = risposte_evento.filter(
     (r) => r.status === "accepted",
   );
@@ -235,19 +240,21 @@ const EventCardSuspended: React.FC<EventCardSuspendedProps> = ({
               status === "accepted"
                 ? "bg-primary text-white shadow-sm shadow-primary/20"
                 : "bg-bg-2 text-text-2 border border-bg-3/60"
-            }`}
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
+            disabled={isExpired}
           >
             Accetta
           </button>
 
           <button
             type="button"
+            disabled={isExpired}
             onClick={(e) => handleVote(e, "rejected")}
             className={`flex-1 font-bold py-2.5 rounded-xl transition-all duration-200 text-xs font-body cursor-pointer ${
               status === "rejected"
                 ? "bg-red-500 text-white shadow-sm shadow-red-500/20"
                 : "bg-bg-2 text-text-2 border border-bg-3/60"
-            }`}
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
           >
             Rifiuta
           </button>

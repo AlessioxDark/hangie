@@ -298,8 +298,6 @@ const deleteGuest = async (req) => {
       .map((p) => p.group_id);
 
     if (dummyGroupIds.length > 0) {
-      // 🚀 STEP 3 (NUOVO): Eliminiamo tutti i messaggi associati a questi gruppi dummy.
-      // Questo rimuoverà anche i messaggi di tipo "event" che bloccavano la Foreign Key!
       const { error: deleteMessagesError } = await supabase
         .from("messaggi")
         .delete()
@@ -308,7 +306,6 @@ const deleteGuest = async (req) => {
       if (deleteMessagesError) throw deleteMessagesError;
       console.log(`Eliminati i messaggi dei gruppi dummy.`);
 
-      // 4. TROVIAMO E CANCELLIAMO GLI EVENTI ASSOCIATI A QUESTI GRUPPI DUMMY
       const { data: eventsToDelete, error: findEventsError } = await supabase
         .from("eventi_gruppo")
         .select("event_id")

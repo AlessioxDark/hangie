@@ -3,7 +3,7 @@ const supabase = require("../config/db");
 const getAll = async (req) => {
   try {
     const EVENTSINPAGE = 12;
-    const { offset } = req.body;
+    const offset = parseInt(req.query.offset, 10) || 0;
     const user = req.user;
 
     const [
@@ -32,40 +32,38 @@ const getAll = async (req) => {
     const eventsList = [...acceptedEvents, ...pendingEvents];
     if (eventsList.length == 0) return { data: [], error: null };
     const eventIds = eventsList.map((e) => e?.event_id);
-    const groupIds = eventsList.map((e) => e.eventi.gruppi.group_id);
-    const { error: risposteError } = await supabase
-      .from("risposte_eventi")
-      .select(
-        "user_id,is_creator,status, eventi!inner(event_id,gruppi(group_id))",
-      )
-      .eq("status", "accepted")
-      .in("eventi.event_id", eventIds)
-      .in("eventi.gruppi.group_id", groupIds);
-    if (risposteError) throw risposteError;
 
     const { data: eventParticipants, error: eventParticipantsError } =
       await supabase
         .from("risposte_eventi")
-        .select("status,utente:utenti(*),eventi(*),created_at,is_creator")
-        .in("eventi.event_id", eventIds);
+        .select("event_id, status, utente:utenti(*), created_at, is_creator")
+        .in("event_id", eventIds);
 
-    const eventParticipantsMap = eventParticipants.reduce((acc, curr) => {
-      if (!acc[curr.eventi?.event_id]) acc[curr.eventi?.event_id] = [];
-      acc[curr.eventi?.event_id].push({
-        utenti: curr.utente,
-        status: curr.status,
-        is_creator: curr.is_creator,
-        created_at: curr.created_at,
-      });
-      return acc;
-    }, {});
+    if (eventParticipantsError) throw eventParticipantsError;
+
+    const eventParticipantsMap = (eventParticipants || []).reduce(
+      (acc, curr) => {
+        const eId = curr.event_id;
+        if (!eId) return acc;
+
+        if (!acc[eId]) acc[eId] = [];
+        acc[eId].push({
+          utenti: curr.utente,
+          status: curr.status,
+          is_creator: curr.is_creator,
+          created_at: curr.created_at,
+        });
+        return acc;
+      },
+      {},
+    );
 
     if (eventParticipantsError) throw eventParticipantsError;
 
     const finalData = eventsList.map((e) => {
       return {
         ...e,
-        partecipanti: eventParticipantsMap[e?.event_id],
+        partecipanti: eventParticipantsMap[e?.event_id] || [], // Fallback ad array vuoto se non ci sono ancora risposte
       };
     });
     return { data: finalData, error: null };
@@ -78,50 +76,38 @@ const deleteEvent = async (req) => {
   try {
     const { event_id } = req.params;
 
-    const { error: messageError } = await supabase
-      .from("messaggi")
-      .delete()
-      .eq("event_id", event_id);
-    if (messageError) throw messageError;
-
-    const { error: eventGroupError } = await supabase
-      .from("eventi_gruppo")
-      .delete()
-      .eq("event_id", event_id);
-    if (eventGroupError) throw eventGroupError;
-
-    const { error: imgsError } = await supabase
-      .from("event_imgs")
-      .delete()
-      .eq("event_id", event_id);
-    if (imgsError) throw imgsError;
-
-    const { err: eventError } = await supabase
-      .from("eventi")
-      .delete()
-      .eq("event_id", event_id);
-    if (eventError) throw eventError;
-
+    // 1. 📂 PULIZIA STORAGE: Gestiamo i file PRIMA di distruggere i record del DB
     const { data: files, error: listError } = await supabase.storage
       .from("eventi")
       .list(`${event_id}`);
 
     if (listError) throw listError;
 
-    if (!files || files.length === 0) {
-      return { data: { message: "ok" }, error: null };
+    if (files && files.length > 0) {
+      const filesToRemove = files.map((x) => `${event_id}/${x.name}`);
+      const { error: deleteStorageError } = await supabase.storage
+        .from("eventi")
+        .remove(filesToRemove);
+
+      if (deleteStorageError) throw deleteStorageError;
     }
-    const filesToRemove = files.map((x) => `${event_id}/${x.name}`);
 
-    const { error: deleteError } = await supabase.storage
+    // 2. 🔥 CANCELLAZIONE DB: Eliminiamo l'evento principale.
+    // Grazie ai tuoi CASCADE, questa query eliminerà automaticamente:
+    // - I record in "event_imgs"
+    // - I record in "eventi_gruppo"
+    // - I record in "risposte_eventi"
+    const { error: eventError } = await supabase
       .from("eventi")
-      .remove(filesToRemove);
+      .delete()
+      .eq("event_id", event_id);
 
-    if (deleteError) throw deleteError;
+    if (eventError) throw eventError; // ✅ Corretto "err" in "error"
 
-    return { data: { message: "ok" }, error: null };
+    return { data: { success: true }, error: null };
   } catch (err) {
-    return { error: err, data: null };
+    console.error("Errore durante l'eliminazione dell'evento:", err);
+    return { error: err.message || err, data: null };
   }
 };
 const getEvent = async (req) => {
@@ -129,7 +115,6 @@ const getEvent = async (req) => {
     const { event_id } = req.params;
     const user = req.user;
 
-    // 1. Recupera l'evento associato all'utente corrente
     const { data: eventData, error: eventError } = await supabase
       .from("risposte_eventi")
       .select(
@@ -154,20 +139,17 @@ const getEvent = async (req) => {
       )
       .eq("event_id", event_id)
       .eq("user_id", user.id)
-      .maybeSingle(); // Ritorna null se non trova nulla, senza lanciare eccezioni di db
+      .maybeSingle();
 
     if (eventError) throw eventError;
 
-    // Se l'utente non è invitato, non troveremo alcun record
     if (!eventData) {
-      console.log("non c'è");
       return {
         data: null,
         error: { message: "Non sei invitato a questo evento", details: "" },
       };
     }
 
-    // 2. Recupera tutti i partecipanti dello stesso evento
     const { data: eventParticipants, error: eventParticipantsError } =
       await supabase
         .from("risposte_eventi")
@@ -232,17 +214,13 @@ const newEvent = async (req) => {
     const user = req.user;
     if (!req.body || !req.body.data)
       throw { message: "Dati evento mancanti o malformati" };
-    console.log(req.body);
     const { images, locationData, nome_luogo, ...realBody } = req.body.data;
 
-    // 🌟 FIX 1: Estraiamo "data" e lo ridenominiamo in "luogoId" per allinearlo al return di getOrCreateLuogo
     const { data: luogoId, error: luogoError } = await getOrCreateLuogo({
       nome_luogo,
       locationData,
     });
     if (luogoError) throw luogoError;
-
-    console.log("luogoId ottenuto:", luogoId);
 
     const group_id = realBody.group_id;
     const { ...eventBody } = realBody;
@@ -330,7 +308,6 @@ const newEvent = async (req) => {
       error: null,
     };
   } catch (err) {
-    console.log("errore ne", err);
     return { data: null, error: err };
   }
 };
@@ -353,83 +330,96 @@ const modifyResponse = async (req) => {
 const getSuspended = async (req) => {
   try {
     const EVENTSINPAGE = 12;
-    const { offset } = req.body;
+    const offset = parseInt(req.body.offset, 10) || 0; // ✅ Parsing sicuro dell'offset
     const user = req.user;
+
+    // 1. Recupera gli eventi in stato "pending" (in sospeso) per l'utente corrente
     const { data: eventsList, error: eventsListError } = await supabase
       .from("risposte_eventi")
       .select(
-        "event_id,status,eventi(event_id,costo,created_at,created_by,data,titolo,descrizione,data_scadenza,cover_img,event_imgs(*),utenti(user_id,nome),luoghi(*),gruppi(group_id,nome,group_cover_img,group_id,partecipanti_gruppo(partecipante_id)))",
+        `
+        event_id,
+        status,
+        eventi (
+          event_id,
+          costo,
+          created_at,
+          created_by,
+          data,
+          titolo,
+          descrizione,
+          data_scadenza,
+          cover_img,
+          event_imgs(*),
+          utenti(user_id, nome, profile_pic),
+          luoghi(*),
+          gruppi(
+            group_id,
+            nome,
+            group_cover_img,
+            partecipanti_gruppo(partecipante_id)
+          )
+        )
+      `,
       )
       .eq("user_id", user.id)
       .eq("status", "pending")
       .range(offset, offset + EVENTSINPAGE - 1);
+
     if (eventsListError) throw eventsListError;
 
-    if (eventsList.length == 0) return { data: [], error: null };
-    const eventIds = eventsList.map((e) => e.event_id);
-    const groupIds = eventsList.map((e) => e.eventi.gruppi.group_id);
-    const { error: risposteError } = await supabase
-      .from("risposte_eventi")
-      .select(
-        `
-    user_id,
-    is_creator,
-    status,
-    eventi!inner(
-      event_id,
-      gruppi!inner(
-        group_id
-      )
-    )
-  `,
-      )
-      .eq("status", "accepted")
-      // Filtro sulla tabella "eventi" relazionata
-      .filter("eventi.event_id", "in", `(${eventIds.join(",")})`)
-      // Filtro sulla tabella "gruppi" annidata dentro eventi
-      .filter("eventi.gruppi.group_id", "in", `(${groupIds.join(",")})`);
+    // Se non ci sono eventi in sospeso, restituiamo subito un array vuoto
+    if (!eventsList || eventsList.length === 0) {
+      return { data: [], error: null };
+    }
 
-    if (risposteError) throw risposteError;
+    // Estraiamo gli ID degli eventi in modo sicuro filtrando eventuali null/undefined
+    const eventIds = eventsList.map((e) => e?.event_id).filter(Boolean);
 
+    // 2. Recupera i partecipanti per questi eventi (Query super ottimizzata e diretta su "event_id")
     const { data: eventParticipants, error: eventParticipantsError } =
       await supabase
         .from("risposte_eventi")
-        .select(
-          `
-      status,
-      created_at,
-      is_creator,
-      utente:utenti(*),
-      eventi!inner(*)
-    `,
-        )
-        .filter("eventi.event_id", "in", `(${eventIds.join(",")})`);
+        .select("event_id, status, utente:utenti(*), created_at, is_creator")
+        .in("event_id", eventIds);
 
     if (eventParticipantsError) throw eventParticipantsError;
-    const eventParticipantsMap = eventParticipants.reduce((acc, curr) => {
-      if (!acc[curr.eventi.event_id]) acc[curr.eventi.event_id] = [];
-      acc[curr.eventi.event_id].push({
-        utenti: curr.utente,
-        status: curr.status,
-        is_creator: curr.is_creator,
-        created_at: curr.created_at,
-      });
-      return acc;
-    }, {});
-    if (eventParticipantsError) throw eventParticipantsError;
-    console.log("ev part", eventParticipantsMap);
+
+    // Mappiamo i partecipanti per un accesso O(1) velocissimo durante l'unione dei dati
+    const eventParticipantsMap = (eventParticipants || []).reduce(
+      (acc, curr) => {
+        const eId = curr.event_id;
+        if (!eId) return acc;
+
+        if (!acc[eId]) acc[eId] = [];
+        acc[eId].push({
+          utenti: curr.utente,
+          status: curr.status,
+          is_creator: curr.is_creator,
+          created_at: curr.created_at,
+        });
+        return acc;
+      },
+      {},
+    );
+
+    // 3. ✅ APPIATTIMENTO DATI E UNIONE: Puliamo la struttura per il frontend
     const finalData = eventsList.map((e) => {
+      const eventDetails = e.eventi || {};
       return {
-        ...e,
-        partecipanti: eventParticipantsMap[e.event_id],
+        ...eventDetails, // Dettagli dell'evento al primo livello del JSON
+        user_status: e.status, // Lo stato dell'utente corrente (sarà sempre "pending")
+        partecipanti: eventParticipantsMap[e.event_id] || [], // Array di risposte degli altri partecipanti
       };
     });
 
     return { data: finalData, error: null };
   } catch (err) {
+    console.error("Errore in getSuspended:", err);
     return { data: null, error: err };
   }
 };
+
 module.exports = {
   getAll,
   getSuspended,

@@ -105,7 +105,7 @@ const EventsSuspended = () => {
   return (
     <div ref={sliderRef} className="w-full bg-bg-1">
       {/* Header di navigazione della pagina */}
-      <div className="flex flex-row items-center gap-3  pb-2.5 border-b border-neutral-300/60">
+      <div className="flex flex-row items-center gap-3  py-2.5 border-b border-neutral-300/60">
         {/* Pulsante Indietro (Area touch espansa a h-9 per facilitare il tap) */}
         <Link
           to="/"

@@ -192,9 +192,18 @@ const Friends = () => {
   };
 
   return (
-    <div className="pt-2">
-      <div className="space-y-4 mb-6">
-        <h1 className="font-body text-2xl font-bold">Friends</h1>
+    <div className="">
+      <div className="space-y-4  sticky top-0 bg-bg-1 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <h1 className="font-title text-2xl font-bold text-text-1 tracking-tight">
+              Amici
+            </h1>
+            <span className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-full">
+              {acceptedFriends.length}
+            </span>
+          </div>
+        </div>
         <SearchBar query={query} setQuery={setQuery} />
       </div>
       {renderContent()}

@@ -21,8 +21,6 @@ import { useSocket } from "@/contexts/SocketContext";
 const MessageEvent = ({ event_details, group_id, utenti }) => {
   const { openModal } = useModal();
   const { session } = useAuth();
-  const location = useLocation();
-  const { currentScreen } = useScreen();
   const [prevStatus, setPrevStatus] = useState(event_details.status);
   const { handleEventDecision, setCurrentEventData } = useChat();
   const { currentSocket } = useSocket();
@@ -43,7 +41,11 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
     }
   };
   // Determina se la data di scadenza è passata
-
+  const isExpired = useMemo(() => {
+    if (!event_details.data_scadenza) return false;
+    return new Date(event_details.data_scadenza).getTime() < Date.now();
+    // return false;
+  }, [event_details.data_scadenza]);
   const isDeadlinePassed = useMemo(() => {
     return (
       event_details.scadenza && new Date(event_details.scadenza) < new Date()
@@ -181,7 +183,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
             <div className="flex flex-row gap-2 mt-1">
               {/* Tasto Accetta */}
               <button
-                disabled={event_details.scadenza < Date.now()}
+                disabled={isExpired}
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -202,7 +204,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
                   event_details.status === "accepted"
                     ? "bg-primary text-white shadow-sm shadow-primary/20"
                     : "bg-bg-2 text-text-2 border border-bg-3/60 active:bg-bg-3/40"
-                }`}
+                } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 {event_details.status === "accepted"
                   ? "Confermato ✓"
@@ -211,7 +213,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
 
               {/* Tasto Rifiuta */}
               <button
-                disabled={event_details.scadenza < Date.now()}
+                disabled={isExpired}
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -232,7 +234,7 @@ const MessageEvent = ({ event_details, group_id, utenti }) => {
                   event_details.status === "rejected"
                     ? "bg-red-500 text-white shadow-sm shadow-red-500/10"
                     : "bg-bg-2 text-text-2 border border-bg-3/60 active:bg-bg-3/40"
-                }`}
+                } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 {event_details.status === "rejected"
                   ? "Rifiutato ✕"

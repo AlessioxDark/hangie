@@ -224,13 +224,12 @@ export const ApiCalls = {
     }).then(handleResponse),
 
   fetchHomeEvents: (offset: number, token: string) =>
-    fetch(`${BASE_URL}/events/discover`, {
-      method: "POST",
+    fetch(`${BASE_URL}/events/discover?offset=${offset}`, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ offset }),
     }).then(handleResponse),
   deleteGuest: async (token: string) => {
     const res = await fetch(`${BASE_URL}/profile/guest/removeall`, {

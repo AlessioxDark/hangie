@@ -8,7 +8,7 @@ import { useModal } from "@/contexts/ModalContext";
 import { useScreen } from "@/contexts/ScreenContext";
 import { useSocket } from "@/contexts/SocketContext";
 import { Plus } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 const GroupEventCard = ({
@@ -84,7 +84,11 @@ const GroupEventCard = ({
     return `${currentScreen == "xs" ? "" : "Scade tra"} ${parti.join(" e ")}`;
   };
 
-  const { openModal } = useModal();
+  const isExpired = useMemo(() => {
+    if (!scadenza) return false;
+    return new Date(scadenza).getTime() < Date.now();
+    // return false;
+  }, [scadenza]);
   const numPartecipanti = risposte_evento.filter(
     (r) => r.status == "accepted",
   ).length;
@@ -175,6 +179,7 @@ const GroupEventCard = ({
                   }}
                   className="w-5 h-5 flex items-center justify-center rounded-full text-text-3 active:bg-bg-2 cursor-pointer transition-colors"
                   aria-label="Opzioni evento"
+                  disabled={isExpired}
                 >
                   <KebabMenuIcon className="w-4 h-4 text-current" />
                 </button>
@@ -238,7 +243,7 @@ const GroupEventCard = ({
           {/* Bottone Accetta */}
           <button
             type="button"
-            disabled={scadenza < Date.now()}
+            disabled={isExpired}
             onClick={(e) => {
               e.stopPropagation();
               const newStatus = status === "accepted" ? "pending" : "accepted";
@@ -263,7 +268,7 @@ const GroupEventCard = ({
           {/* Bottone Rifiuta */}
           <button
             type="button"
-            disabled={scadenza < Date.now()}
+            disabled={isExpired}
             onClick={(e) => {
               e.stopPropagation();
               const newStatus = status === "rejected" ? "pending" : "rejected";

@@ -27,10 +27,10 @@ const LayoutMobile = ({ children }) => {
             </div>
           </header>
 
-          <div className={`${"p-4 pt-2.5 pb-20"}`}>{children}</div>
+          <div className={`${"p-4 pt-0 pb-20"}`}>{children}</div>
         </div>
       ) : (
-        <div className={`${"p-4 pt-2.5 pb-20"}`}>{children}</div>
+        <div className={`${"p-4 pt-0 pb-20"}`}>{children}</div>
       )}
 
       <BottomNav />

@@ -269,7 +269,7 @@ export const SocketProvider = ({ children }) => {
         return prev.map((group) => {
           if (group.group_id === groupId) {
             const newParticipants = group.partecipanti_gruppo.filter(
-              (p) => (p.partecipante_id || p.user_id) !== userId,
+              (p) => (p.partecipante_id || p.user_id || p.utenti?.user_id) !== userId,
             );
             return { ...group, partecipanti_gruppo: newParticipants };
           }
@@ -281,7 +281,7 @@ export const SocketProvider = ({ children }) => {
         setCurrentGroupData((prev) => {
           if (!prev) return prev;
           const newParticipants = prev.partecipanti_gruppo.filter(
-            (p) => (p.partecipante_id || p.user_id) !== userId,
+            (p) => (p.partecipante_id || p.user_id || p.utenti?.user_id) !== userId,
           );
           return { ...prev, partecipanti_gruppo: newParticipants };
         });
@@ -291,7 +291,7 @@ export const SocketProvider = ({ children }) => {
           const newMessaggi = prevChat.messaggi.map((m) => {
             if (m.type == "event" && m.event_details?.risposte_evento) {
               const newRisposte = m.event_details.risposte_evento.filter(
-                (r) => r.utenti?.user_id !== userId,
+                (r) => (r.utenti?.user_id || r.user_id || r.utente?.user_id) !== userId,
               );
               return {
                 ...m,
@@ -325,8 +325,9 @@ export const SocketProvider = ({ children }) => {
           return [data.groupInfo, ...prev];
         }
       });
-      if (currentGroup && currentGroupData.group_id == data.group_id) {
+      if (currentGroup && currentGroupData?.group_id == data.group_id) {
         setCurrentGroupData((prev) => {
+          if (!prev) return prev;
           return {
             ...prev,
             partecipanti_gruppo: data.newParticipants,
@@ -334,11 +335,12 @@ export const SocketProvider = ({ children }) => {
         });
         // MANCA CARICAMENTO DA ROUTE DI CURRENTCHATDATA E POI TESTIAMO TUTTO
         setCurrentChatData((prev) => {
+          if (!prev || !prev.messaggi) return prev;
           const newMessaggi = prev.messaggi.map((m) => {
             if (m.type == "event") {
               const newRisposte = [
                 ...m.event_details.risposte_evento,
-                ...data.eventsResponses[m.event_id],
+                ...(data.eventsResponses?.[m.event_id] || []),
               ];
               return {
                 ...m,
@@ -390,8 +392,9 @@ export const SocketProvider = ({ children }) => {
           return group;
         });
       });
-      if (currentGroupData.group_id == data.group_id) {
+      if (currentGroupData?.group_id == data.group_id) {
         setCurrentGroupData((prev) => {
+          if (!prev) return prev;
           return {
             ...prev,
             [data.field]: data.fieldValue,
@@ -405,9 +408,9 @@ export const SocketProvider = ({ children }) => {
           if (group.group_id === data.group_id) {
             const nuoviPartecipantiGruppo = group.partecipanti_gruppo.map(
               (p) => {
-                return p.partecipante_id == data.participant.partecipante_id
-                  ? { ...p, role: "admin" }
-                  : p;
+                const isTarget = (p.partecipante_id || p.user_id || p.utenti?.user_id) ==
+                                 (data.participant.partecipante_id || data.participant.user_id);
+                return isTarget ? { ...p, role: "admin" } : p;
               },
             );
             return {
@@ -419,12 +422,13 @@ export const SocketProvider = ({ children }) => {
         });
       });
 
-      if (currentGroupData.group_id == data.group_id) {
+      if (currentGroupData?.group_id == data.group_id) {
         setCurrentGroupData((prev) => {
+          if (!prev || !prev.partecipanti_gruppo) return prev;
           const nuoviPartecipantiGruppo = prev.partecipanti_gruppo.map((p) => {
-            return p.partecipante_id == data.participant.partecipante_id
-              ? { ...p, role: "admin" }
-              : p;
+            const isTarget = (p.partecipante_id || p.user_id || p.utenti?.user_id) ==
+                             (data.participant.partecipante_id || data.participant.user_id);
+            return isTarget ? { ...p, role: "admin" } : p;
           });
           return {
             ...prev,
@@ -446,10 +450,11 @@ export const SocketProvider = ({ children }) => {
       };
       if (currentGroup == data.group_id) {
         setCurrentChatData((prev) => {
+          if (!prev || !prev.messaggi) return prev;
           return { ...prev, messaggi: [...prev.messaggi, eventMessage] };
         });
         setGroupEventsData((prevGroups) => [
-          ...prevGroups,
+          ...(prevGroups || []),
           eventMessage.event_details,
         ]);
       }
@@ -467,14 +472,14 @@ export const SocketProvider = ({ children }) => {
           const category = eventMessage.isUser ? "accepted" : "pending";
           return {
             ...prevEvents,
-            [category]: [data.eventi, ...prevEvents[category]],
+            [category]: [{ ...data.eventi, status: myStatus }, ...prevEvents[category]],
           };
         });
       } else {
         setHomeEventsData((prevEvents) => {
           return {
             ...prevEvents,
-            pending: [data.eventi, ...prevEvents.pending],
+            pending: [{ ...data.eventi, status: myStatus }, ...prevEvents.pending],
           };
         });
       }
@@ -485,13 +490,16 @@ export const SocketProvider = ({ children }) => {
         );
         const filteredGroups = prev.filter((g) => g.group_id !== data.group_id);
         if (!messageToUpdate) return prev;
-        messageToUpdate.ultimoMessaggio = {
-          type: "event",
-          content: data.eventi.titolo,
-          sent_at: Date.now(),
+        const updatedGroup = {
+          ...messageToUpdate,
+          ultimoMessaggio: {
+            type: "event",
+            content: data.eventi.titolo,
+            sent_at: Date.now(),
+          },
+          updated_at: new Date().toISOString(),
         };
-        messageToUpdate.updated_at = new Date().toISOString();
-        return [messageToUpdate, ...filteredGroups];
+        return [updatedGroup, ...filteredGroups];
       });
     });
     socket.on("give_read_bulk", (data) => {
@@ -531,7 +539,7 @@ export const SocketProvider = ({ children }) => {
             if (group.group_id === data.group_id) {
               const newParticipants = group.partecipanti_gruppo.filter(
                 (p) =>
-                  (p.partecipante_id || p.user_id) !== data.participant.user_id,
+                  (p.partecipante_id || p.user_id || p.utenti?.user_id) !== data.participant.user_id,
               );
               return { ...group, partecipanti_gruppo: newParticipants };
             }
@@ -550,19 +558,21 @@ export const SocketProvider = ({ children }) => {
           return;
         }
         setCurrentGroupData((prev) => {
+          if (!prev || !prev.partecipanti_gruppo) return prev;
           const newParticipants = prev.partecipanti_gruppo.filter(
             (p) =>
-              (p.partecipante_id || p.user_id) !== data.participant.user_id, // Verifica se la chiave è user_id o partecipante_id
+              (p.partecipante_id || p.user_id || p.utenti?.user_id) !== data.participant.user_id, // Verifica se la chiave è user_id o partecipante_id
           );
 
           return { ...prev, partecipanti_gruppo: newParticipants };
         });
         if (!isMe) {
           setCurrentChatData((prevChat) => {
+            if (!prevChat || !prevChat.messaggi) return prevChat;
             const newMessaggi = prevChat.messaggi.map((m) => {
-              if (m.type == "event") {
+              if (m.type == "event" && m.event_details?.risposte_evento) {
                 const newRisposte = m.event_details.risposte_evento.filter(
-                  (r) => r.utenti.user_id !== data.participant.user_id,
+                  (r) => (r.utenti?.user_id || r.user_id || r.utente?.user_id) !== data.participant.user_id,
                 );
                 return {
                   ...m,
@@ -602,8 +612,17 @@ export const SocketProvider = ({ children }) => {
         navigate(-1);
       }
       setMessagesMap((messMap) => {
-        const { [group_id]: removed, ...newMessMap } = messMap;
-        return newMessMap;
+        const groupMessages = messMap[group_id];
+        if (!groupMessages) return messMap;
+        return {
+          ...messMap,
+          [group_id]: groupMessages.filter((m) => {
+            if (m.type === "event") {
+              return m.event_details?.event_id !== event_id;
+            }
+            return m.event_id !== event_id;
+          }),
+        };
       });
 
       setHomeEventsData((prevEvents) => {
@@ -620,13 +639,14 @@ export const SocketProvider = ({ children }) => {
           return {
             ...prevData,
             messaggi: prevData.messaggi.filter((m) => {
-              if (m?.event_id == null) return true;
-              return m.event_details.event_id !== event_id;
+              if (m?.event_id == null && m?.event_details?.event_id == null) return true;
+              return (m.event_details?.event_id || m.event_id) !== event_id;
             }),
           };
         });
 
         setGroupEventsData((prevEvents) => {
+          if (!prevEvents) return null;
           return prevEvents.filter((e) => e.event_id !== event_id);
         });
       }
@@ -657,7 +677,7 @@ export const SocketProvider = ({ children }) => {
                 status: isMe ? status : m.event_details.status,
                 risposte_evento: m.event_details.risposte_evento.map((r) =>
                   r.utenti?.user_id === sender_id
-                    ? { ...r, status, profile_pic }
+                    ? { ...r, status, utenti: { ...r.utenti, profile_pic } }
                     : r,
                 ),
               },
@@ -684,7 +704,7 @@ export const SocketProvider = ({ children }) => {
                 )
               : [
                   ...prev.risposte_evento,
-                  { status, utenti: { user_id: sender_id, profile_pic } },
+                  { status, user_id: sender_id, utenti: { user_id: sender_id, profile_pic } },
                 ],
           };
         });
@@ -713,7 +733,7 @@ export const SocketProvider = ({ children }) => {
           ...eventToUpdate,
           status: isMe ? status : eventToUpdate.status,
           risposte_evento: eventToUpdate.risposte_evento.map((r) =>
-            r.utenti?.user_id === sender_id ? { ...r, status, profile_pic } : r,
+            r.utenti?.user_id === sender_id ? { ...r, status, utenti: { ...r.utenti, profile_pic } } : r,
           ),
         };
 
@@ -753,11 +773,38 @@ export const SocketProvider = ({ children }) => {
               status: isMe ? status : e.status,
               risposte_evento: e.risposte_evento.map((r) =>
                 r.utenti?.user_id === sender_id || r.user_id === sender_id
-                  ? { ...r, status, profile_pic }
+                  ? { ...r, status, utenti: { ...r.utenti, profile_pic } }
                   : r,
               ),
             };
           });
+        });
+      }
+
+      // 5. CACHE MAPPA GLOBALE DEI MESSAGGI (messagesMap)
+      if (messagesMap[group_id]) {
+        setMessagesMap((messMap) => {
+          const groupMessages = messMap[group_id];
+          if (!groupMessages) return messMap;
+          return {
+            ...messMap,
+            [group_id]: groupMessages.map((m) => {
+              if (m.type !== "event" || m.event_id !== event_id) return m;
+
+              return {
+                ...m,
+                event_details: {
+                  ...m.event_details,
+                  status: isMe ? status : m.event_details.status,
+                  risposte_evento: m.event_details.risposte_evento.map((r) =>
+                    r.utenti?.user_id === sender_id
+                      ? { ...r, status, utenti: { ...r.utenti, profile_pic } }
+                      : r,
+                  ),
+                },
+              };
+            }),
+          };
         });
       }
     });

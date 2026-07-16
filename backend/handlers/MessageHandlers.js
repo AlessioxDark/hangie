@@ -2,12 +2,6 @@ const supabase = require("../config/db");
 
 const messageHandlers = (io, socket) => {
   socket.on("send_message", async (message, group_id, token, local_id) => {
-    // 🚀 ORA QUESTO LOG DEVE COMPARIRE AL 100%
-    console.log("--- CHIAMATA RICEVUTA NEL BACKEND ---");
-    console.log("Messaggio:", message);
-    console.log("Group ID:", group_id);
-    console.log("Local ID:", local_id);
-
     try {
       const {
         data: { user },
@@ -35,16 +29,18 @@ const messageHandlers = (io, socket) => {
         .filter((p) => p.user_id !== user.id)
         .map((p) => ({ message_id: messageId, user_id: p.user_id }));
 
-      const notificationInsert = participantsData
-        .filter((p) => p.user_id !== user.id)
-        .map((p) => ({
-          type: "new_message",
-          sender_id: user.id,
-          is_read: false,
-          group_id,
-          user_id: p.user_id,
-          message_id: messageId,
-        }));
+      const otherParticipants = participantsData.filter(
+        (p) => p.user_id !== user.id,
+      );
+      const notificationInsert = otherParticipants.map((p) => ({
+        type: "new_message",
+        sender_id: user.id,
+        is_read: false,
+        group_id,
+        user_id: p.user_id,
+        message_id: messageId,
+      }));
+      console.log("notifiche inserito", notificationInsert);
 
       await supabase.from("messaggi_status").insert(rowStatus);
 
@@ -64,20 +60,6 @@ const messageHandlers = (io, socket) => {
           sender_id: user.id,
           sender,
         });
-
-        if (p.user_id !== user.id) {
-          io.to(user.id).emit("new_notification", {
-            type: "new_message",
-            sender,
-            receiver: p,
-            group_id,
-            messaggio: { content: message },
-            gruppo: { group_id }, // Costruiamo un mini oggetto al volo invece di passare lo stato intero
-            user_id: p.user_id,
-            created_at: new Date(),
-            is_read: false,
-          });
-        }
       });
 
       await supabase.from("notifiche").insert(notificationInsert);
@@ -116,6 +98,40 @@ const messageHandlers = (io, socket) => {
           io.to(p.user_id).emit("message_arrived", {
             message_id,
             group_id,
+          });
+        });
+      }
+      const { data: unreadNotifications, error: notificationsError } =
+        await supabase
+          .from("notifiche")
+          .select(
+            `
+          notifica_id,
+          type,
+          group_id,
+          user_id,
+          created_at,
+          is_read,
+          sender_id
+        `,
+          )
+          .eq("user_id", user_id)
+          .eq("is_read", false)
+          .order("created_at", { ascending: true }); // In ordine cronologico (dalla più vecchia)
+      if (notificationsError) throw notificationsError;
+
+      if (unreadNotifications && unreadNotifications.length > 0) {
+        console.log("mando notifica");
+        unreadNotifications.forEach((notif) => {
+          socket.emit("new_notification", {
+            type: notif.type,
+            sender_id: notif.sender_id,
+            group_id: notif.group_id,
+            gruppo: { group_id: notif.group_id },
+            user_id: notif.user_id,
+            created_at: notif.created_at,
+            is_read: notif.is_read,
+            notification_id: notif.notifica_id, // Utile per poterla segnare come letta in seguito
           });
         });
       }
@@ -223,6 +239,7 @@ const messageHandlers = (io, socket) => {
   );
 
   socket.on("identify_user", async (userId) => {
+    console.log("IDENTIFICO USER");
     try {
       // 1. Aggiorna tutti i messaggi 'sent' dell'utente a 'delivered'
       const { data: updatedStatuses, error: updateError } = await supabase
@@ -235,12 +252,15 @@ const messageHandlers = (io, socket) => {
       if (updateError) throw updateError;
 
       if (updatedStatuses && updatedStatuses.length > 0) {
-        const messageIds = [...new Set(updatedStatuses.map((s) => s.message_id))];
+        console.log("update");
+        const messageIds = [
+          ...new Set(updatedStatuses.map((s) => s.message_id)),
+        ];
 
         // 2. Recuperiamo i dettagli dei messaggi e i relativi stati rimanenti in parallelo
         const [
           { data: messagesData, error: messagesError },
-          { data: remainingSentData, error: remainingSentError }
+          { data: remainingSentData, error: remainingSentError },
         ] = await Promise.all([
           supabase
             .from("messaggi")
@@ -250,26 +270,33 @@ const messageHandlers = (io, socket) => {
             .from("messaggi_status")
             .select("message_id, status")
             .in("message_id", messageIds)
-            .eq("status", "sent")
+            .eq("status", "sent"),
         ]);
 
         if (messagesError) throw messagesError;
         if (remainingSentError) throw remainingSentError;
 
         if (messagesData) {
-          const stillSentSet = new Set((remainingSentData || []).map(r => r.message_id));
-          
+          const stillSentSet = new Set(
+            (remainingSentData || []).map((r) => r.message_id),
+          );
+
           // Filtriamo i messaggi che sono stati consegnati a TUTTI (nessuno ha più status 'sent')
-          const fullyDeliveredMessages = messagesData.filter(msg => !stillSentSet.has(msg.message_id));
+          const fullyDeliveredMessages = messagesData.filter(
+            (msg) => !stillSentSet.has(msg.message_id),
+          );
 
           if (fullyDeliveredMessages.length > 0) {
-            const groupIds = [...new Set(fullyDeliveredMessages.map(msg => msg.group_id))];
+            const groupIds = [
+              ...new Set(fullyDeliveredMessages.map((msg) => msg.group_id)),
+            ];
 
             // Recuperiamo tutti i partecipanti per tutti questi gruppi in un colpo solo
-            const { data: partecipantiDB, error: participantsError } = await supabase
-              .from("partecipanti_gruppo")
-              .select("group_id, user_id:partecipante_id")
-              .in("group_id", groupIds);
+            const { data: partecipantiDB, error: participantsError } =
+              await supabase
+                .from("partecipanti_gruppo")
+                .select("group_id, user_id:partecipante_id")
+                .in("group_id", groupIds);
 
             if (participantsError) throw participantsError;
 
@@ -292,11 +319,15 @@ const messageHandlers = (io, socket) => {
                 });
               }
             }
+            console.log("ci arrivo");
           }
         }
       }
     } catch (err) {
-      console.error("Errore durante l'aggiornamento della consegna dei messaggi:", err);
+      console.error(
+        "Errore durante l'aggiornamento della consegna dei messaggi:",
+        err,
+      );
     }
   });
 };

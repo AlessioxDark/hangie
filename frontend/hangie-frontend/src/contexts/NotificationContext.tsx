@@ -87,26 +87,50 @@ export const NotificationProvider = ({ children }) => {
   }, [session?.user?.id]);
   useEffect(() => {
     if (currentSocket) {
+      // 1. Gestione nuova notifica (real-time o recuperata all'avvio)
       currentSocket.on("new_notification", (data) => {
-        if (data.user_id === session.user.id) {
+        console.log("NOTIFICA RICEVUTA", data);
+        if (data.user_id === session?.user?.id) {
           setCurrentNotifications((prev) => {
-            return { read: prev.read, unread: [data, ...prev.unread] };
+            // Assicuriamoci che unread sia un array (fallback su array vuoto se undefined)
+            const currentUnread = prev.unread || [];
+
+            // 🛡️ Controllo anti-duplicato: verifichiamo se la notifica esiste già
+            const exists = currentUnread.some(
+              (n) =>
+                n.notification_id === data.notification_id ||
+                (n.group_id === data.group_id &&
+                  n.created_at === data.created_at),
+            );
+
+            if (exists) return prev; // Non aggiorna lo stato se è già presente
+
+            return {
+              read: prev.read || [],
+              unread: [data, ...currentUnread], // ✅ Aggiunge in testa mantenendo la cronologia
+            };
           });
         }
       });
+
+      // 2. Pulizia notifiche per gruppo letto
       currentSocket.on("clear_notifications_count", (data) => {
-        if (data.user_id === session.user.id) {
+        if (data.user_id === session?.user?.id) {
           setCurrentNotifications((prev) => {
-            const newlyRead = prev.unread.filter(
-              (n) => n.group_id === data.group_id,
+            const currentUnread = prev.unread || [];
+            const currentRead = prev.read || [];
+
+            const newlyRead = currentUnread.filter(
+              (n) => String(n.group_id) === String(data.group_id),
             );
-            const remainingUnread = prev.unread.filter(
-              (n) => n.group_id !== data.group_id,
+            const remainingUnread = currentUnread.filter(
+              (n) => String(n.group_id) !== String(data.group_id),
             );
+
             return {
               read: [
                 ...newlyRead.map((n) => ({ ...n, is_read: true })),
-                ...prev.read,
+                ...currentRead,
               ],
               unread: remainingUnread,
             };
@@ -121,17 +145,10 @@ export const NotificationProvider = ({ children }) => {
         currentSocket.off("clear_notifications_count");
       }
     };
-  }, [
-    session?.user?.id,
-    setCurrentChatData,
-    // currentChatData?.messaggi?.length,
-    currentNotifications,
-    setCurrentNotifications,
-    currentSocket,
-    setGroupsData,
-    groupsData,
-  ]);
-
+  }, [currentSocket, session?.user?.id]);
+  useEffect(() => {
+    console.log("cambio notifiche", currentNotifications);
+  }, [currentNotifications?.unread.length]);
   const markAllAsRead = async () => {
     if (!session?.user?.id) return;
 
@@ -141,15 +158,31 @@ export const NotificationProvider = ({ children }) => {
       .eq("user_id", session.user.id)
       .eq("is_read", false);
 
-    if (error) return;
+    if (error) {
+      console.error("Errore durante l'aggiornamento delle notifiche:", error);
+      return;
+    }
 
     setCurrentNotifications((prev) => {
+      const currentUnread = prev.unread || [];
+      const currentRead = prev.read || [];
+
+      // Mappiamo le notifiche non lette a lette
+      const newlyRead = currentUnread.map((n) => ({ ...n, is_read: true }));
+
+      // Creiamo un set di ID già presenti in newlyRead per evitare di duplicarli
+      // se per caso erano già finiti o parzialmente presenti in prev.read
+      const newlyReadIds = new Set(
+        newlyRead.map((n) => n.notification_id).filter(Boolean),
+      );
+
+      const filteredExistingRead = currentRead.filter(
+        (n) => !newlyReadIds.has(n.notification_id),
+      );
+
       return {
         unread: [],
-        read: [
-          ...(prev.unread || []).map((n) => ({ ...n, is_read: true })),
-          ...(prev.read || []),
-        ],
+        read: [...newlyRead, ...filteredExistingRead],
       };
     });
   };

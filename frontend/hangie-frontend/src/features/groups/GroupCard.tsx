@@ -56,9 +56,13 @@ const GroupCard = ({
     });
   };
 
-  const unreadMsgNotifications = currentNotifications?.unread.filter((n) => {
-    if (n.type == "new_message" && n.group_id == group_id) return n;
-  }).length;
+  const unreadMsgNotifications = useMemo(
+    () =>
+      currentNotifications?.unread.filter((n) => {
+        if (n.type == "new_message" && n.group_id == group_id) return n;
+      }).length,
+    [currentNotifications?.unread, group_id],
+  );
   return (
     <div
       onClick={() => {

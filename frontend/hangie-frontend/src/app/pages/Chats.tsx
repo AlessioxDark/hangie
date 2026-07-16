@@ -111,6 +111,14 @@ const Chats = () => {
     // la lunghezza resta uguale e l'effetto NON si riattiva a vuoto.
   }, [messaggi?.length, currentSocket, session?.user?.id, currentGroup]);
 
+  useEffect(() => {
+    if (!session || !currentGroup || !currentSocket) return;
+    currentSocket.emit("clear_notifications_count", {
+      group_id: currentGroup,
+      user_id: session.user.id,
+    });
+  }, [session, currentGroup, currentSocket]);
+
   if (isAuthLoading) {
     return <RenderLoadingState type={"chat"} />;
   }

@@ -81,7 +81,7 @@ export const SocketProvider = ({ children }) => {
         user_id: data.sender_id,
         sent_at: Date.now(),
         isUser: isMe,
-        isSent: true,
+        isSent: false,
         isRead: false,
         utenti: data.sender,
         isOptimistic: false,
@@ -269,7 +269,9 @@ export const SocketProvider = ({ children }) => {
         return prev.map((group) => {
           if (group.group_id === groupId) {
             const newParticipants = group.partecipanti_gruppo.filter(
-              (p) => (p.partecipante_id || p.user_id || p.utenti?.user_id) !== userId,
+              (p) =>
+                (p.partecipante_id || p.user_id || p.utenti?.user_id) !==
+                userId,
             );
             return { ...group, partecipanti_gruppo: newParticipants };
           }
@@ -281,7 +283,8 @@ export const SocketProvider = ({ children }) => {
         setCurrentGroupData((prev) => {
           if (!prev) return prev;
           const newParticipants = prev.partecipanti_gruppo.filter(
-            (p) => (p.partecipante_id || p.user_id || p.utenti?.user_id) !== userId,
+            (p) =>
+              (p.partecipante_id || p.user_id || p.utenti?.user_id) !== userId,
           );
           return { ...prev, partecipanti_gruppo: newParticipants };
         });
@@ -291,7 +294,9 @@ export const SocketProvider = ({ children }) => {
           const newMessaggi = prevChat.messaggi.map((m) => {
             if (m.type == "event" && m.event_details?.risposte_evento) {
               const newRisposte = m.event_details.risposte_evento.filter(
-                (r) => (r.utenti?.user_id || r.user_id || r.utente?.user_id) !== userId,
+                (r) =>
+                  (r.utenti?.user_id || r.user_id || r.utente?.user_id) !==
+                  userId,
               );
               return {
                 ...m,
@@ -408,8 +413,10 @@ export const SocketProvider = ({ children }) => {
           if (group.group_id === data.group_id) {
             const nuoviPartecipantiGruppo = group.partecipanti_gruppo.map(
               (p) => {
-                const isTarget = (p.partecipante_id || p.user_id || p.utenti?.user_id) ==
-                                 (data.participant.partecipante_id || data.participant.user_id);
+                const isTarget =
+                  (p.partecipante_id || p.user_id || p.utenti?.user_id) ==
+                  (data.participant.partecipante_id ||
+                    data.participant.user_id);
                 return isTarget ? { ...p, role: "admin" } : p;
               },
             );
@@ -426,8 +433,9 @@ export const SocketProvider = ({ children }) => {
         setCurrentGroupData((prev) => {
           if (!prev || !prev.partecipanti_gruppo) return prev;
           const nuoviPartecipantiGruppo = prev.partecipanti_gruppo.map((p) => {
-            const isTarget = (p.partecipante_id || p.user_id || p.utenti?.user_id) ==
-                             (data.participant.partecipante_id || data.participant.user_id);
+            const isTarget =
+              (p.partecipante_id || p.user_id || p.utenti?.user_id) ==
+              (data.participant.partecipante_id || data.participant.user_id);
             return isTarget ? { ...p, role: "admin" } : p;
           });
           return {
@@ -472,14 +480,20 @@ export const SocketProvider = ({ children }) => {
           const category = eventMessage.isUser ? "accepted" : "pending";
           return {
             ...prevEvents,
-            [category]: [{ ...data.eventi, status: myStatus }, ...prevEvents[category]],
+            [category]: [
+              { ...data.eventi, status: myStatus },
+              ...prevEvents[category],
+            ],
           };
         });
       } else {
         setHomeEventsData((prevEvents) => {
           return {
             ...prevEvents,
-            pending: [{ ...data.eventi, status: myStatus }, ...prevEvents.pending],
+            pending: [
+              { ...data.eventi, status: myStatus },
+              ...prevEvents.pending,
+            ],
           };
         });
       }
@@ -539,7 +553,8 @@ export const SocketProvider = ({ children }) => {
             if (group.group_id === data.group_id) {
               const newParticipants = group.partecipanti_gruppo.filter(
                 (p) =>
-                  (p.partecipante_id || p.user_id || p.utenti?.user_id) !== data.participant.user_id,
+                  (p.partecipante_id || p.user_id || p.utenti?.user_id) !==
+                  data.participant.user_id,
               );
               return { ...group, partecipanti_gruppo: newParticipants };
             }
@@ -561,7 +576,8 @@ export const SocketProvider = ({ children }) => {
           if (!prev || !prev.partecipanti_gruppo) return prev;
           const newParticipants = prev.partecipanti_gruppo.filter(
             (p) =>
-              (p.partecipante_id || p.user_id || p.utenti?.user_id) !== data.participant.user_id, // Verifica se la chiave è user_id o partecipante_id
+              (p.partecipante_id || p.user_id || p.utenti?.user_id) !==
+              data.participant.user_id, // Verifica se la chiave è user_id o partecipante_id
           );
 
           return { ...prev, partecipanti_gruppo: newParticipants };
@@ -572,7 +588,9 @@ export const SocketProvider = ({ children }) => {
             const newMessaggi = prevChat.messaggi.map((m) => {
               if (m.type == "event" && m.event_details?.risposte_evento) {
                 const newRisposte = m.event_details.risposte_evento.filter(
-                  (r) => (r.utenti?.user_id || r.user_id || r.utente?.user_id) !== data.participant.user_id,
+                  (r) =>
+                    (r.utenti?.user_id || r.user_id || r.utente?.user_id) !==
+                    data.participant.user_id,
                 );
                 return {
                   ...m,
@@ -639,7 +657,8 @@ export const SocketProvider = ({ children }) => {
           return {
             ...prevData,
             messaggi: prevData.messaggi.filter((m) => {
-              if (m?.event_id == null && m?.event_details?.event_id == null) return true;
+              if (m?.event_id == null && m?.event_details?.event_id == null)
+                return true;
               return (m.event_details?.event_id || m.event_id) !== event_id;
             }),
           };
@@ -704,7 +723,11 @@ export const SocketProvider = ({ children }) => {
                 )
               : [
                   ...prev.risposte_evento,
-                  { status, user_id: sender_id, utenti: { user_id: sender_id, profile_pic } },
+                  {
+                    status,
+                    user_id: sender_id,
+                    utenti: { user_id: sender_id, profile_pic },
+                  },
                 ],
           };
         });
@@ -733,7 +756,9 @@ export const SocketProvider = ({ children }) => {
           ...eventToUpdate,
           status: isMe ? status : eventToUpdate.status,
           risposte_evento: eventToUpdate.risposte_evento.map((r) =>
-            r.utenti?.user_id === sender_id ? { ...r, status, utenti: { ...r.utenti, profile_pic } } : r,
+            r.utenti?.user_id === sender_id
+              ? { ...r, status, utenti: { ...r.utenti, profile_pic } }
+              : r,
           ),
         };
 

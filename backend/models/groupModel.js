@@ -101,7 +101,7 @@ const getGroup = async (req) => {
 
       const isSent =
         statuses.length > 0 &&
-        statuses.every((s) => s.status === "sent" || s.status === "read");
+        statuses.every((s) => s.status === "delivered" || s.status === "read");
       return {
         ...m,
         isUser,

@@ -221,5 +221,83 @@ const messageHandlers = (io, socket) => {
       }
     },
   );
+
+  socket.on("identify_user", async (userId) => {
+    try {
+      // 1. Aggiorna tutti i messaggi 'sent' dell'utente a 'delivered'
+      const { data: updatedStatuses, error: updateError } = await supabase
+        .from("messaggi_status")
+        .update({ status: "delivered" })
+        .eq("user_id", userId)
+        .eq("status", "sent")
+        .select("message_id");
+
+      if (updateError) throw updateError;
+
+      if (updatedStatuses && updatedStatuses.length > 0) {
+        const messageIds = [...new Set(updatedStatuses.map((s) => s.message_id))];
+
+        // 2. Recuperiamo i dettagli dei messaggi e i relativi stati rimanenti in parallelo
+        const [
+          { data: messagesData, error: messagesError },
+          { data: remainingSentData, error: remainingSentError }
+        ] = await Promise.all([
+          supabase
+            .from("messaggi")
+            .select("message_id, group_id, user_id")
+            .in("message_id", messageIds),
+          supabase
+            .from("messaggi_status")
+            .select("message_id, status")
+            .in("message_id", messageIds)
+            .eq("status", "sent")
+        ]);
+
+        if (messagesError) throw messagesError;
+        if (remainingSentError) throw remainingSentError;
+
+        if (messagesData) {
+          const stillSentSet = new Set((remainingSentData || []).map(r => r.message_id));
+          
+          // Filtriamo i messaggi che sono stati consegnati a TUTTI (nessuno ha più status 'sent')
+          const fullyDeliveredMessages = messagesData.filter(msg => !stillSentSet.has(msg.message_id));
+
+          if (fullyDeliveredMessages.length > 0) {
+            const groupIds = [...new Set(fullyDeliveredMessages.map(msg => msg.group_id))];
+
+            // Recuperiamo tutti i partecipanti per tutti questi gruppi in un colpo solo
+            const { data: partecipantiDB, error: participantsError } = await supabase
+              .from("partecipanti_gruppo")
+              .select("group_id, user_id:partecipante_id")
+              .in("group_id", groupIds);
+
+            if (participantsError) throw participantsError;
+
+            if (partecipantiDB) {
+              // Raggruppiamo i partecipanti per group_id
+              const participantsByGroup = partecipantiDB.reduce((acc, p) => {
+                if (!acc[p.group_id]) acc[p.group_id] = [];
+                acc[p.group_id].push(p.user_id);
+                return acc;
+              }, {});
+
+              // Inviamo l'evento message_arrived a tutti i partecipanti di ciascun gruppo
+              for (const msg of fullyDeliveredMessages) {
+                const targetUsers = participantsByGroup[msg.group_id] || [];
+                targetUsers.forEach((userIdToNotify) => {
+                  io.to(userIdToNotify).emit("message_arrived", {
+                    message_id: msg.message_id,
+                    group_id: msg.group_id,
+                  });
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Errore durante l'aggiornamento della consegna dei messaggi:", err);
+    }
+  });
 };
 module.exports = messageHandlers;

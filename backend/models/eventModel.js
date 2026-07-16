@@ -3,6 +3,7 @@ const supabase = require("../config/db");
 const getAll = async (req) => {
   try {
     const EVENTSINPAGE = 12;
+    console.log(req.query);
     const offset = parseInt(req.query.offset, 10) || 0;
     const user = req.user;
 

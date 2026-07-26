@@ -2,16 +2,30 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # Run at midnight (0 0 * *) on Sunday (0) and Friday (5)
-    - cron: '0 0 * * 0,5'
+    # Ore 02:14 UTC la Domenica (0) e il Venerdì (5) - evita le code di mezzanotte
+    - cron: '14 2 * * 0,5'
   workflow_dispatch:
+
+permissions:
+  contents: write # Serve a GitHub per poter salvare il file aggiornato
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Ping Supabase Database
         run: |
           curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/utenti?select=user_id&limit=1" \
           -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
           -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}"
+
+      - name: Mantieni attivo il repository (Keepalive)
+        run: |
+          date > last_ping.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add last_ping.txt
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: keepalive ping" && git push)
